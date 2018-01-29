@@ -2,6 +2,7 @@ package com.emotibot.jsEngine.service;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,11 @@ import org.apache.log4j.Logger;
 
 import com.emotibot.jsEngine.common.Constants;
 import com.emotibot.jsEngine.element.InputElement;
+import com.emotibot.jsEngine.utils.InputElementUtils;
+import com.emotibot.jsEngine.utils.TemplateUtils;
 import com.emotibot.middleware.conf.ConfigManager;
 import com.emotibot.middleware.utils.JsonUtils;
+import com.emotibot.middleware.utils.StringUtils;
 
 /**
  * 需要有工具类先将数据加载，之后
@@ -39,6 +43,7 @@ public class JsEngineServiceImpl implements JsEngineService
             logger.error("input element is invalied");
             return null;
         }
+        InputElementUtils.adjustInputElement(inputElement);
         Map<String, Object> params = new HashMap<String, Object>();
         params.put(Constants.INPUT_ELEMENT_NAME, inputElement);
         params.put(Constants.SERVICE_NAME, this);
@@ -77,12 +82,45 @@ public class JsEngineServiceImpl implements JsEngineService
      * 
      * 目前有修饰语的tag为:name, actor, director, type
      * 
+     * 这里需要并行处理，获取到
+     * 
      * @param str
      * @return
      */
-    public String getModifier(String semanticTag, Map<String, Object> semantic)
+    public Map<String, String> getModifier(List<String> semanticTags, Map<String, Object> semantic)
     {
-        return "modifier";
+        Map<String, String> ret = new HashMap<String, String>();
+        for(String semanticTag : semanticTags)
+        {
+            if (!semantic.containsKey(semanticTag))
+            {
+                continue;
+            }
+            Object value = semantic.get(semanticTag);
+            if (!(value instanceof String))
+            {
+                continue;
+            }
+            String valueStr = (String) value;
+            String tag = TemplateUtils.tryGetModifyTag(semanticTag);
+            if (!StringUtils.isEmpty(tag))
+            {
+                List<String> chooseTag = new ArrayList<String>();
+                chooseTag.add(valueStr);
+                String modify = TemplateUtils.getConfig(tag, chooseTag);
+                if (StringUtils.isEmpty(modify))
+                {
+                    continue;
+                }
+                ret.put(semanticTag, modify);
+            }
+            else
+            {
+                //TODO: 需要通过knowledge来调用
+                continue;
+            }
+        }
+        return ret;
     }
     
     /**
@@ -93,11 +131,26 @@ public class JsEngineServiceImpl implements JsEngineService
      */
     public String getTemplateByTag(String templateTag, List<String> chooseTag)
     {
-        return "template";
+        return TemplateUtils.getConfig(templateTag, chooseTag);
+    }
+    
+    public void logInfo(String msg)
+    {
+        logger.error(msg);
     }
     
     public void logError(String msg)
     {
         logger.error(msg);
+    }
+    
+    public Map<String, String> createEmptyMap()
+    {
+        return new HashMap<String, String>();
+    }
+    
+    public List<String> createEmptyList()
+    {
+        return new ArrayList<String>();
     }
 }

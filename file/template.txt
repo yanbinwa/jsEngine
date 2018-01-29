@@ -24,11 +24,11 @@ Case4
 
 #点播模板
 Case5
-为您播放列表中的<Element>
+为您播放列表中的<Index>
 
 #U盘资源模板
 Case6
-为您播放U盘中的<Element>
+为您播放U盘中的<Name>
 
 #TVSET模板
 Case7

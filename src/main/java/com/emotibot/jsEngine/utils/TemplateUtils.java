@@ -17,6 +17,16 @@ import com.emotibot.middleware.conf.ConfigManager;
 import com.emotibot.middleware.utils.FileUtils;
 import com.emotibot.middleware.utils.StringUtils;
 
+/**
+ * 这里有三种tag
+ * 
+ * 1. template tag: Case1, Case2
+ * 2. templateElement tag: <Name>
+ * 3. semanticTag: name, actor
+ * 
+ * @author emotibot
+ *
+ */
 public class TemplateUtils
 {
     private static Logger logger = Logger.getLogger(TemplateUtils.class);
@@ -33,6 +43,27 @@ public class TemplateUtils
     /** 其他修饰语，不包含在knowledge中的*/
     private static Map<String, Map<String, List<String>>> modifyMap;
     
+    //semantic
+    public static final String SEMANTIC_NAME_TAG = "name";
+    public static final String SEMANTIC_ACTOR_TAG = "actor";
+    public static final String SEMANTIC_DIRECTOR_TAG = "director";
+    public static final String SEMANTIC_YEAR_TAG = "year";
+    public static final String SEMANTIC_CATEGORY_TAG = "category";
+    public static final String SEMANTIC_TAG_TAG = "tag";
+    public static final String SEMANTIC_RATE_TAG = "rate";
+    public static final String SEMANTIC_AWARD_TAG = "award";
+    public static final String SEMANTIC_ROLE_TAG = "role";
+    public static final String SEMANTIC_AREA_TAG = "area";
+    public static final String SEMANTIC_TYPE_TAG = "type";
+    public static final String SEMANTIC_SUBAWARD_TAG = "sub_award";
+    public static final String SEMANTIC_LANGUAGE_TAG = "language";
+    public static final String SEMANTIC_PUBLISHER_TAG = "publisher";
+    public static final String SEMANTIC_EPISODE_TAG = "episode";
+    public static final String SEMANTIC_SEASON_TAG = "season";
+    public static final String SEMANTIC_PART_TAG = "part";
+    public static final String SEMANTIC_TERM_TAG = "term";
+    
+    //Template
     public static final String WITH_NAME_TAG = "Case1";
     public static final String SINGLE_ELEMENT_TAG = "Case2";
     public static final String TWICE_ELEMENT_TAG = "Case3";
@@ -42,7 +73,6 @@ public class TemplateUtils
     public static final String TV_SET_TAG = "Case7";
     public static final String BEFORE_TAG = "Case8";
     public static final String AFTER_TAG = "Case9";
-    public static final String TYPE_MODIFY_TAG = "Case10";
     
     public static final String NAME_TEMPLATE_TAG = "<Name>";
     public static final String ACTOR_TEMPLATE_TAG = "<Actor>";
@@ -60,9 +90,12 @@ public class TemplateUtils
     public static final String PUBLISHER_TEMPLATE_TAG = "<Publisher>";
     public static final String BEFORE_TEMPLATE_TAG = "<Before>";
     
-    private static final String TYPE_MODIFY_START_TAG = "<";
-    private static final String TYPE_MODIFY_END_TAG = ">";
-    private static final String TYPE_MODIFY_SPLIT_TAG = ",";
+    //Modify
+    public static final String TYPE_MODIFY_TAG = "Case10";
+    
+    private static final String MODIFY_START_TAG = "<";
+    private static final String MODIFY_END_TAG = ">";
+    private static final String MODIFY_SPLIT_TAG = ",";
     
     private static final String[] allTagList = {WITH_NAME_TAG, SINGLE_ELEMENT_TAG, TWICE_ELEMENT_TAG,
             TRIPLE_AND_ABOVE_ELEMENT_TAG, SELECT_TAG, U_DISK_TAG, TV_SET_TAG, BEFORE_TAG, AFTER_TAG, TYPE_MODIFY_TAG};
@@ -73,6 +106,8 @@ public class TemplateUtils
             ROLE_TEMPLATE_TAG, AREA_TEMPLATE_TAG, TYPE_TEMPLATE_TAG, SUBAWARD_TEMPLATE_TAG, LANGUAGE_TEMPLATE_TAG,
             PUBLISHER_TEMPLATE_TAG, BEFORE_TEMPLATE_TAG};
     private static Set<String> allTemplateTagSet;
+    
+    private static Map<String, String> modifyKeyToTagMap;
     
     private static Random random = new Random();
     
@@ -89,6 +124,8 @@ public class TemplateUtils
             allTemplateTagSet.add(templateTag);
         }
         loadConfigs();
+        modifyKeyToTagMap = new HashMap<String, String>();
+        modifyKeyToTagMap.put(SEMANTIC_TYPE_TAG, TYPE_MODIFY_TAG);
     }
     
     public static void loadConfigs()
@@ -198,33 +235,33 @@ public class TemplateUtils
             singleModifyMapTmp = new HashMap<String, List<String>>();
             modifyMapTmp.put(tag, singleModifyMapTmp);
         }
-        String typeModifyTag = getTypeModifyTag(line);
-        if (StringUtils.isEmpty(typeModifyTag))
+        String modifyTag = getModifyTag(line);
+        if (StringUtils.isEmpty(modifyTag))
         {
             return;
         }
-        List<String> typeModifyList = getTypeModify(line);
+        List<String> typeModifyList = getModify(line);
         if (typeModifyList == null || typeModifyList.isEmpty())
         {
             return;
         }
-        List<String> modifyListTmp = singleModifyMapTmp.get(typeModifyTag);
+        List<String> modifyListTmp = singleModifyMapTmp.get(modifyTag);
         if (modifyListTmp == null)
         {
             modifyListTmp = new ArrayList<String>();
-            singleModifyMapTmp.put(typeModifyTag, modifyListTmp);
+            singleModifyMapTmp.put(modifyTag, modifyListTmp);
         }
         modifyListTmp.addAll(typeModifyList);
     }
     
-    private static String getTypeModifyTag(String line)
+    private static String getModifyTag(String line)
     {
-        int startIndex = line.indexOf(TYPE_MODIFY_START_TAG);
+        int startIndex = line.indexOf(MODIFY_START_TAG);
         if (startIndex != 0)
         {
             return null;
         }
-        int endIndex = line.indexOf(TYPE_MODIFY_END_TAG);
+        int endIndex = line.indexOf(MODIFY_END_TAG);
         if (endIndex < 0)
         {
             return null;
@@ -232,11 +269,11 @@ public class TemplateUtils
         return line.substring(startIndex + 1, endIndex);
     }
     
-    private static List<String> getTypeModify(String line)
+    private static List<String> getModify(String line)
     {
-        int startIndex = line.indexOf(TYPE_MODIFY_END_TAG) + 1;
+        int startIndex = line.indexOf(MODIFY_END_TAG) + 1;
         String modifyStr = line.substring(startIndex);
-        String[] modifis = modifyStr.split(TYPE_MODIFY_SPLIT_TAG);
+        String[] modifis = modifyStr.split(MODIFY_SPLIT_TAG);
         List<String> ret = new ArrayList<String>();
         for(String modify : modifis)
         {
@@ -317,13 +354,15 @@ public class TemplateUtils
     }
     
     /**
-     * 这里只是传入一个type名称，但是为了统一格式，所以传入一个list
+     * 
+     * 
+     * @param tag  这里的semantic中的key
      * @param typeList
      * @return
      */
-    public static String getModify(String tag, List<String> typeList)
+    private static String getModify(String tag, List<String> typeList)
     {
-        if(StringUtils.isEmpty(tag) || typeList == null || typeList.isEmpty())
+        if (StringUtils.isEmpty(tag) || typeList == null || typeList.isEmpty())
         {
             return null;
         }
@@ -340,5 +379,10 @@ public class TemplateUtils
         }
         int randomIndex = random.nextInt(modifyList.size());
         return modifyList.get(randomIndex);
+    }
+    
+    public static String tryGetModifyTag(String tag)
+    {
+        return modifyKeyToTagMap.get(tag);
     }
 }

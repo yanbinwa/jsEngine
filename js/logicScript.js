@@ -1,40 +1,71 @@
-function getElement(_hasModify, _name)
+/** 常量 */
+var SEMANTIC_NAME_TAG = "name";
+var SEMANTIC_ACTOR_TAG = "actor";
+var SEMANTIC_DIRECTOR_TAG = "director";
+var SEMANTIC_TYPE_TAG = "type";
+var SEMANTIC_EPISODE_TAG = "episode";
+var SEMANTIC_SEASON_TAG = "season";
+var SEMANTIC_PART_TAG = "part";
+var SEMANTIC_TERM_TAG = "term";
+
+var WITH_NAME_TEMPALTE_TAG = "Case1";
+var SINGLE_ELEMENT_TEMPALTE_TAG = "Case2";
+var TWICE_ELEMENT_TEMPALTE_TAG = "Case3";
+var TRIPLE_AND_ABOVE_ELEMENT_TEMPALTE_TAG = "Case4";
+var SELECT_TEMPALTE_TAG = "Case5";
+var U_DISK_TEMPALTE_TAG = "Case6";
+var TV_SET_TEMPALTE_TAG = "Case7";
+var BEFORE_TEMPALTE_TAG = "Case8";
+var AFTER_TEMPALTE_TAG = "Case9";
+
+function getElement(_semanticTag, _hasModify, _templateElementTag)
 {
 	var element = {
+		semanticTag : _semanticTag,
 		hasModify : _hasModify,
-		name : _name
+		templateElementTag : _templateElementTag
 	}
 	return element;
 }
 
 /** 定义元素结构体 */
-var videoModel = getElement(true, "<NAME>");
-var actorModel = getElement(true, "<ACTOR>");
-var directorModel = getElement(true, "<Director>");
-var typeModel = getElement(true, "<Type>");
-var areaModel = getElement(false, "<Area>");
-var yearModel = getElement(false, "<Year>");
-var roleModel = getElement(false, "<Role>");
-var languageModel = getElement(false, "<Language>");
-var rateModel = getElement(false, "<Rate>");
-var publisherModel = getElement(false, "<Publisher>");
-var awardModel = getElement(false, "<Award>");
-var sub_awardModel = getElement(false, "<SubAward>");
-var categoryModel = getElement(false, "<Category>");
-var tagModel = getElement(false, "<Tag>");
+var videoModel = getElement("name", true, "<Name>");
+var actorModel = getElement("actor", true, "<Actor>");
+var directorModel = getElement("director", true, "<Director>");
+var typeModel = getElement("type", true, "<Type>");
+var areaModel = getElement("area", false, "<Area>");
+var yearModel = getElement("year", false, "<Year>");
+var roleModel = getElement("role", false, "<Role>");
+var languageModel = getElement("language", false, "<Language>");
+var rateModel = getElement("rate", false, "<Rate>");
+var publisherModel = getElement("publisher", false, "<Publisher>");
+var awardModel = getElement("award", false, "<Award>");
+var sub_awardModel = getElement("sub_award", false, "<SubAward>");
+var categoryModel = getElement("category", false, "<Category>");
+var tagModel = getElement("tag", false, "<Tag>");
 /** 其他结构体 */
 /* 前导语*/
-var beforeModel = getElement(false, "<Before>");
+var beforeModel = getElement(null, false, "<Before>");
 
 /** 定义标签map */
 var elementList = [videoModel, actorModel, directorModel, typeModel,
 	areaModel, yearModel, roleModel, languageModel, rateModel, publisherModel,
 	awardModel, sub_awardModel, beforeModel];
-var elementMap = {};
+var tempalteTagToElementMap = {};
 for (var i = 0; i < elementList.length; i ++)
 {
 	element = elementList[i];
-	elementMap[element.name] = element;
+	tempalteTagToElementMap[element.templateElementTag] = element;
+}
+
+var semanticTagToElementMap = {};
+for (var i = 0; i < elementList.length; i ++)
+{
+	element = elementList[i];
+	if (element.semanticTag != null)
+	{
+		semanticTagToElementMap[element.semanticTag] = element;
+	}
 }
 
 /**
@@ -95,14 +126,34 @@ function getReplyForVideoQuery(data)
 	}
 }
 
+/**
+ * 这里只是获取name，不加修饰词
+ * 
+ * @param semantic
+ * @returns
+ */
 function getReplyForVideoQueryWithUSB(semantic)
 {
+	/** 每种reply的策略, 可以提前*/
+	var chooseSemanticTagList = [SEMANTIC_NAME_TAG];
+	//包含了modify提取的优先级顺序
+	var needModifySemanticTagList = [];
+	var maxModifyCount = 0;
 	
+	var sematicTagList = getSematicTagList(needModifySemanticTagList, semantic);
+	var tempalte = getTemplate(U_DISK_TEMPALTE_TAG, sematicTagList);
+	if (tempalte == null)
+	{
+		return "";
+	}
+	var modifyList = getModifyList(chooseSemanticTagList, semantic);
+	var modifyMap = getModify(modifyList, semantic);
+	return tempalte;
 }
 
 function getReplyForVideoQueryWithName(semantic)
 {
-	
+	return "";
 }
 
 /**
@@ -110,15 +161,67 @@ function getReplyForVideoQueryWithName(semantic)
  */
 function getReplyForVideoQueryWithoutName(semantic)
 {
-	
+	return "";
 }
 
 function getReplyForSelect(data)
 {
-	
+	return "";
 }
 
 function getReplyForTVSet(data)
+{
+	return "";
+}
+
+function getSematicTagList(chooseSemanticTagList, semantic)
+{
+	var sematicTagList = service.createEmptyList();
+	for (var i = 0; i < chooseSemanticTagList.length; i ++)
+	{
+		if (semantic.get(chooseSemanticTagList[i]) != null)
+		{
+			sematicTagList.add(chooseSemanticTagList[i]);
+		}
+	}
+	return sematicTagList;
+}
+
+function getModifyList(chooseSemanticTagList, semantic)
+{
+	var modifyList = service.createEmptyList();
+	for (var i = 0; i < chooseSemanticTagList.length; i ++)
+	{
+		if (semantic.get(chooseSemanticTagList[i]) != null && semanticTagToElementMap[chooseSemanticTagList[i]].hasModify)
+		{
+			modifyList.add(chooseSemanticTagList[i]);
+		}
+	}
+}
+
+function getTemplate(tempalteTag, sematicTagList)
+{
+	var templateElementTagList = service.createEmptyList();
+	for(var i = 0; i < sematicTagList.size(); i ++)
+	{
+		var templateElementTag = semanticTagToElementMap[sematicTagList.get(i)].templateElementTag;
+		templateElementTagList.add(templateElementTag);
+	}
+	return service.getTemplateByTag(tempalteTag, templateElementTagList);
+}
+
+/**
+ * 通过semantic list来获取的
+ * @param sematicTagList
+ * @param sematic
+ * @returns
+ */
+function getModify(sematicTagList, sematic)
+{
+	return service.getModifier(sematicTagList, sematic);
+}
+
+function assembleReply()
 {
 	
 }
@@ -126,12 +229,12 @@ function getReplyForTVSet(data)
 var d = validateInputElement(data);
 if (d)
 {
-	var semantic = data.getSemantic();
-	service.logError("有效的输入");
-	semantic.get("name");
+	service.logInfo("有效的输入");
+	var reply = getReply(data);
+	reply;
 }
 else
 {
 	service.logError("无效的输入");
-	videoModel.name;
+	videoModel.templateElementTag;
 }
