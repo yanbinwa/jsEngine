@@ -60,6 +60,9 @@ public class TemplateUtils
     private static final String MODIFY_START_TAG = "<";
     private static final String MODIFY_END_TAG = ">";
     private static final String MODIFY_SPLIT_TAG = ",";
+    
+    //String.split()分割是正则表达式，所以为\\+
+    private static final String COMMON_TEMPLATE_SPLIT_TAG = "\\+";
         
     private static final String[] allTemplateAndModifyTags = {VIDEO_QUERY_TEMPLATE_TAG, VIDEO_QUERY_COMMON_TEMPLATE_TAG, 
             U_DIST_TEMPLATE_TAG, SELECT_TEMPLATE_TAG, TV_SET_TEMPLATE_TAG, BEFORE_TAG, AFTER_TAG, TYPE_MODIFY_TAG};
@@ -229,6 +232,11 @@ public class TemplateUtils
     
     private static void loadTemplates1(String line, List<String> arrrayList)
     {
+        List<String> templateElementTagList = getTemplateTagFromInput(line);
+        if (templateElementTagList != null)
+        {
+            line = adjustTemplateLine(line, templateElementTagList);
+        }
         arrrayList.add(line);
     }
     
@@ -247,6 +255,7 @@ public class TemplateUtils
         {
             return;
         }
+        modifyTag = modifyTag.toLowerCase();
         List<String> modifyList = getModify(line);
         if (modifyList == null || modifyList.isEmpty())
         {
@@ -339,7 +348,7 @@ public class TemplateUtils
         case SELECT_TEMPLATE_TAG:
             return getTemplates(templateTag, templateElementTags);
         case VIDEO_QUERY_COMMON_TEMPLATE_TAG:
-            return getCommonTemplate();
+            return getCommonTemplate(templateElementTags);
         case BEFORE_TAG:
             return getBefore();
         case AFTER_TAG:
@@ -374,10 +383,48 @@ public class TemplateUtils
         return templateList.get(randomIndex);
     }
     
-    private static String getCommonTemplate()
+    /**
+     * 按照"+"分段，之后看每段中是否包含templateElementTags中的元素，如果包含，就将该段提取
+     */
+    private static String getCommonTemplate(List<String> templateElementTags)
     {
-        int randomIndex = random.nextInt(commonTemplateList.size());
-        return commonTemplateList.get(randomIndex);
+        List<String> chooseTemplateList = new ArrayList<String>();
+        for (String template : commonTemplateList)
+        {
+            boolean tag = true;
+            for (String templateElement : templateElementTags)
+            {
+                if (!template.contains(templateElement))
+                {
+                    tag = false;
+                    break;
+                }
+            }
+            if (tag)
+            {
+                chooseTemplateList.add(template);
+            }
+        }
+        if (chooseTemplateList.size() == 0)
+        {
+            return null;
+        }
+        int randomIndex = random.nextInt(chooseTemplateList.size());
+        String chooseTemplate = chooseTemplateList.get(randomIndex);
+        String template = "";
+        String[] templateSections = chooseTemplate.split(COMMON_TEMPLATE_SPLIT_TAG);
+        for (String templateSection : templateSections)
+        {
+            for (String templateElement : templateElementTags)
+            {
+                if (templateSection.contains(templateElement))
+                {
+                    template += templateSection;
+                    break;
+                }
+            }
+        }
+        return template;
     }
     
     private static String getBefore()

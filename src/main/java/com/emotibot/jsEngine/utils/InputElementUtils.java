@@ -18,10 +18,14 @@ public class InputElementUtils
     public static final String SEMANTIC_ACTOR_TAG = "actor";
     public static final String SEMANTIC_DIRECTOR_TAG = "director";
     public static final String SEMANTIC_SOURCE_TAG = "source";
+    public static final String SEMANTIC_YEAR_TAG = "year";
+    public static final String SEMANTIC_RATE_TAG = "rate";
     /**
      * 1. 将likely name转换为name
      * 2. 如果actor与director一样，去掉director
      * 3. 如果包含source，将内容替换成U盘
+     * 4. 如果包含year，需要在后面加一个"年"字
+     * 5. 如果包含rate，需要在后面加"评分"
      * 3. 将semantic中的key转换为templateElementTag
      * 
      * @param element
@@ -52,6 +56,18 @@ public class InputElementUtils
         if (semantic.containsKey(SEMANTIC_SOURCE_TAG))
         {
             semantic.put(SEMANTIC_SOURCE_TAG, "U盘");
+        }
+        
+        //如果包含year，需要在后面加一个"年"字
+        if (semantic.containsKey(SEMANTIC_YEAR_TAG))
+        {
+            semantic.put(SEMANTIC_YEAR_TAG, semantic.get(SEMANTIC_YEAR_TAG) + "年");
+        }
+        
+        //如果包含rate，需要在后面加"评分"
+        if (semantic.containsKey(SEMANTIC_RATE_TAG))
+        {
+            semantic.put(SEMANTIC_RATE_TAG, semantic.get(SEMANTIC_RATE_TAG) + "评分");
         }
         
         //将semantic中的key转换为templateElementTag

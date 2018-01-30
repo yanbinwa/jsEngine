@@ -46,8 +46,8 @@ var VOLUME_UP_THRESHOLD = 50;
 var VOLUME_DOWN_THRESHOLD = 5;
 var LIGHT_UP_THRESHOLD = 70;
 var LIGHT_DOWN_THRESHOLD = 5;
-var TVSET_VOLUME_BEFORE = "调节音量至<$ListNum$>，";
-var TVSET_LIGHT_BEFORE = "亮度调节至<$ListNum$>，";
+var TVSET_VOLUME_BEFORE = "调节音量至" + LIST_NUM_TEMPLATE_ELEMENT_TAG + "，";
+var TVSET_LIGHT_BEFORE = "亮度调节至" + LIST_NUM_TEMPLATE_ELEMENT_TAG + "，";
 
 function getTemplateElement(_templateElementTag, _hasModify)
 {
@@ -90,7 +90,18 @@ for (var i = 0; i < elementList.length; i ++)
 	templateElementTagToElementMap[element.templateElementTag] = element;
 }
 
-function getTemplateFeature(_chooseTemplateElements, _maxTemplateElement, _chooseModifyElements, _maxModifyCount, _hasBefore, _hasAfter)
+/**
+ * 
+ * @param _chooseTemplateElements 该类template关注的模板参数，按优先级排序
+ * @param _maxTemplateElement 该类template需要的最多模板参数，-1则没有数目限制
+ * @param _chooseModifyElements 该类template关注的修饰词参数，按优先级排序
+ * @param _maxModifyCount 该类template需要的最多修饰词参数，-1则没有数目限制
+ * @param _hasBefore 该类template是否需要前导词
+ * @param _hasAfter 该类template是否需要结词（包括记忆播报）
+ * @param _hasCategoryOrTag 该类template是否显示category或tag模板参数
+ * @returns
+ */
+function getTemplateFeature(_chooseTemplateElements, _maxTemplateElement, _chooseModifyElements, _maxModifyCount, _hasBefore, _hasAfter, _hasCategoryOrTag)
 {
 	var feature = {
 		chooseTemplateElements : _chooseTemplateElements,
@@ -98,7 +109,8 @@ function getTemplateFeature(_chooseTemplateElements, _maxTemplateElement, _choos
 		chooseModifyElements : _chooseModifyElements,
 		maxModifyCount : _maxModifyCount,
 		hasBefore : _hasBefore,
-		hasAfter : _hasAfter
+		hasAfter : _hasAfter,
+		hasCategoryOrTag : _hasCategoryOrTag
 	}
 	return feature;
 }
@@ -110,7 +122,8 @@ var videoQueryWithNameFeature = getTemplateFeature(
 		[ACTOR_TEMPLATE_ELEMENT_TAG, NAME_TEMPLATE_ELEMENT_TAG, DIRECTOR_TEMPLATE_ELEMENT_TAG],
 		1,
 		true,
-		true
+		true,
+		false
 	);
 
 var videoQueryWithoutNameFeature = getTemplateFeature(
@@ -118,6 +131,7 @@ var videoQueryWithoutNameFeature = getTemplateFeature(
 		-1,
 		[ACTOR_TEMPLATE_ELEMENT_TAG, DIRECTOR_TEMPLATE_ELEMENT_TAG, TYPE_TEMPLATE_ELEMENT_TAG],
 		1,
+		true,
 		true,
 		true
 	);
@@ -127,8 +141,9 @@ var videoQueryWithCommonTemplateFeature = getTemplateFeature(
 		-1,
 		[],
 		-1,
+		true,
 		false,
-		false
+		true
 	);
 
 var usbDistTemplateFeature = getTemplateFeature(
@@ -137,6 +152,7 @@ var usbDistTemplateFeature = getTemplateFeature(
 		[],
 		-1,
 		true,
+		false,
 		false
 	);
 
@@ -146,14 +162,16 @@ var selectTemplateFeature = getTemplateFeature(
 		[],
 		-1,
 		true,
+		false,
 		false
 	);
 
 var tvSetTemplateFeature = getTemplateFeature(
-		[LIST_NUM_TEMPLATE_ELEMENT_TAG],
+		[],
 		-1,
 		[],
 		-1,
+		false,
 		false,
 		false
 	);
@@ -165,6 +183,7 @@ var tvSetTemplateFeature = getTemplateFeature(
  *  4. U盘资源片名不需要加修饰语
  *  5. 单片名如有其他元素，只选择一个，有优先级
  *  6. 如果有Category或Tag，将其添加搜索，这是默认选项
+ *  7. 如果都没有匹配到，则需要提取commontemplate
  */
 
 /**
@@ -288,10 +307,6 @@ function getReplyForVideoQueryWithUSB(semantic)
 {
 	service.translateSemanticValue(U_DIST_TEMPLATE_TAG, semantic);
 	var templateElementTagList = getTemplateElementTagList(usbDistTemplateFeature, semantic);
-	if (semantic.get(VALUE_ELEMENT_TAG) != null)
-	{
-		templateElementTagList.add(LIST_NUM_TEMPLATE_ELEMENT_TAG);
-	}
 	var template = getTemplate(U_DIST_TEMPLATE_TAG, templateElementTagList);
 	if (service.isStringEmpty(template))
 	{
@@ -312,7 +327,6 @@ function getReplyForSelect(semantic)
 {
 	service.translateSemanticValue(SELECT_TEMPLATE_TAG, semantic);
 	var templateElementTagList = getTemplateElementTagList(selectTemplateFeature, semantic);
-	templateElementTagList.add(LIST_NUM_TEMPLATE_ELEMENT_TAG);
 	var template = getTemplate(SELECT_TEMPLATE_TAG, templateElementTagList);
 	if (service.isStringEmpty(template))
 	{
@@ -374,11 +388,10 @@ function getReplyForTVSet(semantic)
 	service.translateSemanticValue(TV_SET_TEMPLATE_TAG, semantic);
 	var templateElementTagList = getTemplateElementTagList(tvSetTemplateFeature, semantic);
 	templateElementTagList.add(elementTag);
-	if (semantic.get(VALUE_ELEMENT_TAG) != null)
-	{
-		templateElementTagList.add(LIST_NUM_TEMPLATE_ELEMENT_TAG);
-	}
 	var template = getTemplate(TV_SET_TEMPLATE_TAG, templateElementTagList);
+	//先获取模板，之后添加<$NumList$>
+	templateElementTagList.clear();
+	templateElementTagList.add(LIST_NUM_TEMPLATE_ELEMENT_TAG);
 	template = before + template;
 	if (template == null)
 	{
@@ -399,7 +412,7 @@ function getReplyForTVSet(semantic)
  */
 function getReplyBase(semantic, templateFeature, templateTag)
 {
-	service.translateSemanticValue(SELECT_TEMPLATE_TAG, semantic);
+	service.translateSemanticValue(templateTag, semantic);
 	var templateElementTagList = getTemplateElementTagList(templateFeature, semantic);
 	var template = getTemplate(templateTag, templateElementTagList);
 	if (isStringEmpty(template))
@@ -443,11 +456,11 @@ function getTemplateElementTagList(templateFeature, semantic)
 		var before = service.getBefore(BEFORE_TAG);
 		semantic.put(BEFORE_TEMPLATE_ELEMENT_TAG, before);
 	}
-	if (semantic.get(CATEGORY_TEMPLATE_ELEMENT_TAG) != null)
+	if (semantic.get(CATEGORY_TEMPLATE_ELEMENT_TAG) != null && templateFeature.hasCategoryOrTag)
 	{
 		templateElementTagList.add(CATEGORY_TEMPLATE_ELEMENT_TAG);
 	}
-	else if (semantic.get(TAG_TEMPLATE_ELEMENT_TAG) != null)
+	else if (semantic.get(TAG_TEMPLATE_ELEMENT_TAG) != null && templateFeature.hasCategoryOrTag)
 	{
 		templateElementTagList.add(TAG_TEMPLATE_ELEMENT_TAG);
 	}
@@ -456,7 +469,12 @@ function getTemplateElementTagList(templateFeature, semantic)
 
 function getTemplate(templateTag, templateElementTagList)
 {
-	return service.getTemplateByTag(templateTag, templateElementTagList);
+	var template = service.getTemplateByTag(templateTag, templateElementTagList);
+	if (isStringEmpty(template))
+	{
+		template = service.getTemplateByTag(VIDEO_QUERY_COMMON_TEMPLATE_TAG, templateElementTagList);
+	}
+	return template;
 }
 
 /**
@@ -509,6 +527,7 @@ function getModify(sematicTagList, sematic)
  */
 function assembleReply(templateTag, templateFeature, templateElementTagList, template, modifyTagList, modifyTagToModifyMap, semantic)
 {
+	service.logInfo("templateTag: " + templateTag + "; templateElementTagList: " + templateElementTagList + "; template: " + template + "; modifyTagList: " + modifyTagList + "; modifyTagToModifyMap: " + modifyTagToModifyMap + "; semantic: " + semantic);
 	var maxModifyCount = templateFeature.maxModifyCount;
 	var chooseModifyTagList = service.createEmptyList();
 	var count = 0;
@@ -539,7 +558,7 @@ function assembleReply(templateTag, templateFeature, templateElementTagList, tem
 		{
 			after = service.getAfter(AFTER_TAG);
 		}
-		reply += after;
+		reply += "，" + after;
 	}
 	return reply;
 }
@@ -591,7 +610,7 @@ function getMemoryReply(memoryReplyTag)
 
 function isStringEmpty(string)
 {
-	return service
+	return service.isStringEmpty(string);
 }
 
 //主流程：

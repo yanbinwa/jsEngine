@@ -87,11 +87,16 @@ public class SemanticUtils
             if (semantic.containsKey(nameProfixTag))
             {
                 String numStr = (String) semantic.get(nameProfixTag);
-                String profix = null;
+                String profix = "";
                 try
                 {
-                    Integer.parseInt(numStr);
-                    profix = profixTagToTempalteMap.get(nameProfixTag).replaceAll(TEMPLATE_REPLACE_TAG, numStr);
+                    int num = Integer.parseInt(numStr);
+                    if (num < 0)
+                    {
+                        profix += BACKWARD_STRING;
+                    }
+                    num = Math.abs(num);
+                    profix += profixTagToTempalteMap.get(nameProfixTag).replaceAll(TEMPLATE_REPLACE_TAG, NumUtils.numberToChinese(num));
                 }
                 catch(Exception e)
                 {

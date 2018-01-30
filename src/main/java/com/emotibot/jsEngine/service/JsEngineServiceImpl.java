@@ -23,7 +23,7 @@ import com.emotibot.middleware.utils.JsonUtils;
 import com.emotibot.middleware.utils.StringUtils;
 
 /**
- * 需要有工具类先将数据加载，之后
+ * 需要有工具类先将数据加载，可以并行起多个jsEngine，从而实现并发调用
  * 
  * @author emotibot
  *
@@ -53,6 +53,13 @@ public class JsEngineServiceImpl implements JsEngineService
         return invokeJs(jsFilePath, params);
     }
     
+    /**
+     * 这里可以起多个jsEngine，进行并发调用
+     * 
+     * @param jsFile
+     * @param params
+     * @return
+     */
     private String invokeJs(String jsFile, Map<String, Object> params)
     {
         ScriptEngine engine = manager.getEngineByName("js");
@@ -172,7 +179,7 @@ public class JsEngineServiceImpl implements JsEngineService
     
     public void logInfo(String msg)
     {
-        logger.error(msg);
+        logger.info(msg);
     }
     
     public void logError(String msg)
