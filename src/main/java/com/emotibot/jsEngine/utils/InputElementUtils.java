@@ -1,11 +1,12 @@
 package com.emotibot.jsEngine.utils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.emotibot.jsEngine.element.InputElement;
+import com.emotibot.middleware.utils.StringUtils;
 
 /**
- * 
  * 
  * @author emotibot
  *
@@ -13,8 +14,14 @@ import com.emotibot.jsEngine.element.InputElement;
 public class InputElementUtils
 {
     public static final String SEMANTIC_LIKELY_NAME_TAG = "likely_name";
+    public static final String SEMANTIC_NAME_TAG = "name";
+    public static final String SEMANTIC_ACTOR_TAG = "actor";
+    public static final String SEMANTIC_DIRECTOR_TAG = "director";
     /**
-     * 将likely name转换为name
+     * 1. 将likely name转换为name
+     * 2. 如果actor与director一样，去掉director
+     * 3. 将semantic中的key转换为templateElementTag
+     * 
      * @param element
      */
     public static void adjustInputElement(InputElement element)
@@ -29,6 +36,20 @@ public class InputElementUtils
             return;
         }
         String likely = (String) semantic.get(SEMANTIC_LIKELY_NAME_TAG);
-        semantic.put(TemplateUtils.SEMANTIC_NAME_TAG, likely);
+        semantic.put(SEMANTIC_NAME_TAG, likely);
+        
+        String actor = (String) semantic.get(SEMANTIC_ACTOR_TAG);
+        String director = (String) semantic.get(SEMANTIC_DIRECTOR_TAG);
+        if (!StringUtils.isEmpty(actor) && !StringUtils.isEmpty(director) && actor.equals(director))
+        {
+            semantic.remove(SEMANTIC_DIRECTOR_TAG);
+        }
+        
+        Map<String, Object> newSemantic = new HashMap<String, Object>();
+        for (Map.Entry<String, Object> entry : semantic.entrySet())
+        {
+            newSemantic.put(TemplateUtils.convertSemanticTagToTemplateTag(entry.getKey()), entry.getValue());
+        }
+        element.setSemantic(newSemantic);
     }
 }

@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import com.emotibot.jsEngine.common.Constants;
 import com.emotibot.jsEngine.element.InputElement;
 import com.emotibot.jsEngine.utils.InputElementUtils;
+import com.emotibot.jsEngine.utils.SemanticUtils;
 import com.emotibot.jsEngine.utils.TemplateUtils;
 import com.emotibot.middleware.conf.ConfigManager;
 import com.emotibot.middleware.utils.JsonUtils;
@@ -87,40 +88,65 @@ public class JsEngineServiceImpl implements JsEngineService
      * @param str
      * @return
      */
-    public Map<String, String> getModifier(List<String> semanticTags, Map<String, Object> semantic)
+    public Map<String, String> getModifier(List<String> modifyTagList, Map<String, Object> semantic)
     {
         Map<String, String> ret = new HashMap<String, String>();
-        for(String semanticTag : semanticTags)
+        for(String modifyTag : modifyTagList)
         {
-            if (!semantic.containsKey(semanticTag))
+            if (!semantic.containsKey(modifyTag))
             {
                 continue;
             }
-            Object value = semantic.get(semanticTag);
+            Object value = semantic.get(modifyTag);
             if (!(value instanceof String))
             {
                 continue;
             }
             String valueStr = (String) value;
-            String tag = TemplateUtils.tryGetModifyTag(semanticTag);
-            if (!StringUtils.isEmpty(tag))
+            if (TemplateUtils.hasModifyWithTemplateElementTag(modifyTag))
             {
-                List<String> chooseTag = new ArrayList<String>();
-                chooseTag.add(valueStr);
-                String modify = TemplateUtils.getConfig(tag, chooseTag);
+                List<String> semanticValueList = new ArrayList<String>();
+                semanticValueList.add(valueStr);
+                String modify = TemplateUtils.getConfig(modifyTag, semanticValueList);
                 if (StringUtils.isEmpty(modify))
                 {
                     continue;
                 }
-                ret.put(semanticTag, modify);
+                ret.put(modifyTag, modify);
             }
             else
             {
-                //TODO: 需要通过knowledge来调用
+                //TODO: 需要通过knowledge来调用，这里需要多线程处理
                 continue;
             }
         }
         return ret;
+    }
+    
+    public String assembleReply(String template, List<String> templateElementTagList, 
+            List<String> chooseModifyTagList, Map<String, String> modifyTagToModifyMap, 
+            Map<String, Object> semantic)
+    {
+        String retStr = template;
+        for(String templateElementTag : templateElementTagList)
+        {
+            String semanticValue = "";
+            if (retStr.contains(templateElementTag))
+            {
+                semanticValue += (String) semantic.get(templateElementTag);
+                if (chooseModifyTagList.contains(templateElementTag))
+                {
+                    semanticValue = modifyTagToModifyMap.get(templateElementTag) + semanticValue;
+                }
+                retStr = retStr.replace(templateElementTag, semanticValue);
+            }
+            else
+            {
+                logger.error("should contains template element tag: " + templateElementTag + "; template is: " + template);
+                return null;
+            }
+        }
+        return retStr;
     }
     
     /**
@@ -129,9 +155,19 @@ public class JsEngineServiceImpl implements JsEngineService
      * @param semantic
      * @return
      */
-    public String getTemplateByTag(String templateTag, List<String> chooseTag)
+    public String getTemplateByTag(String templateTag, List<String> chooseTemplateElementTag)
     {
-        return TemplateUtils.getConfig(templateTag, chooseTag);
+        return TemplateUtils.getConfig(templateTag, chooseTemplateElementTag);
+    }
+    
+    public String getBefore(String templateTag)
+    {
+        return TemplateUtils.getConfig(templateTag, null);
+    }
+    
+    public String getAfter(String templateTag)
+    {
+        return TemplateUtils.getConfig(templateTag, null);
     }
     
     public void logInfo(String msg)
@@ -152,5 +188,25 @@ public class JsEngineServiceImpl implements JsEngineService
     public List<String> createEmptyList()
     {
         return new ArrayList<String>();
+    }
+    
+    public String getLowCaseString(String line)
+    {
+        return line.toLowerCase();
+    }
+    
+    public int getIntFromString(String str)
+    {
+        return Integer.parseInt(str);
+    }
+    
+    public void translateSemanticValue(String templateTag, Map<String, Object> semantic)
+    {
+        SemanticUtils.translateSemanticValue(templateTag, semantic);
+    }
+    
+    public boolean isStringEmpty(String str)
+    {
+        return StringUtils.isEmpty(str);
     }
 }

@@ -18,10 +18,10 @@ public class TemplateUtilsTest
     private void test1()
     {
         List<String> tempalteTags = new ArrayList<String>();
-        tempalteTags.add(TemplateUtils.NAME_TEMPLATE_TAG);
-        tempalteTags.add(TemplateUtils.ACTOR_TEMPLATE_TAG);
-        tempalteTags.add(TemplateUtils.BEFORE_TEMPLATE_TAG);
-        String tempalte = TemplateUtils.getConfig(TemplateUtils.WITH_NAME_TAG, tempalteTags);
+        tempalteTags.add("<$Name$>");
+        tempalteTags.add("<$Actor$>");
+        tempalteTags.add("<$Before$>");
+        String tempalte = TemplateUtils.getConfig(TemplateUtils.VIDEO_QUERY_TEMPLATE_TAG, tempalteTags);
         System.out.println(tempalte);
     }
 

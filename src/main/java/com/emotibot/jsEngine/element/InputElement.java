@@ -76,6 +76,11 @@ public class InputElement
         return this.semantic;
     }
     
+    public void setSemantic(Map<String, Object> semantic)
+    {
+        this.semantic = semantic;
+    }
+    
     @Override
     public String toString()
     {

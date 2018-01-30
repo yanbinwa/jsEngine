@@ -12,11 +12,6 @@ public class JsEngineServiceImplTest
         JsonObject result = getVideoQueryWithUSBObj();
         JsEngineServiceImpl service = new JsEngineServiceImpl();
         String ret = service.getReplay(result.toString());
-        ret = service.getReplay(result.toString());
-        ret = service.getReplay(result.toString());
-        ret = service.getReplay(result.toString());
-        ret = service.getReplay(result.toString());
-        ret = service.getReplay(result.toString());
         System.out.println(ret);
     }
     

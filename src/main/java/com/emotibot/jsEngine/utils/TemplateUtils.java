@@ -17,12 +17,11 @@ import com.emotibot.middleware.conf.ConfigManager;
 import com.emotibot.middleware.utils.FileUtils;
 import com.emotibot.middleware.utils.StringUtils;
 
-/**
- * 这里有三种tag
+/** 
+ * semantic tag 转化为 template tag
  * 
- * 1. template tag: Case1, Case2
- * 2. templateElement tag: <Name>
- * 3. semanticTag: name, actor
+ * 1. 将semantic tag小写，
+ * 2. 在semantic tag两侧加入<:和:>
  * 
  * @author emotibot
  *
@@ -33,99 +32,50 @@ public class TemplateUtils
     private static ReentrantLock lock = new ReentrantLock();
     /**
      * 模板类型->模板的组成->模板的list
-     * 模板类型是：单片名，一个参数，两个参数，三个参数，点播模板，U盘资源模板，TVSET模板
+     * 模板类型是：求视频模板，U盘资源模板，点播模板，TVSET模板
      */
-    private static Map<String, Map<String, List<String>>> templateMap;
+    private static Map<String, Map<String, List<String>>> templateTagToTemplateElementsToTemplateListMap;
+    private static List<String> commonTemplateList;
     /** 前缀例句*/
     private static List<String> beforeList;
     /** 结词例句*/
     private static List<String> afterList;
-    /** 其他修饰语，不包含在knowledge中的*/
-    private static Map<String, Map<String, List<String>>> modifyMap;
+    /** 其他修饰语，不包含在knowledge中的，扩展了TVSET的template*/
+    private static Map<String, Map<String, List<String>>> templateTagToSemanticValueToModifyListMap;
     
-    //semantic
-    public static final String SEMANTIC_NAME_TAG = "name";
-    public static final String SEMANTIC_ACTOR_TAG = "actor";
-    public static final String SEMANTIC_DIRECTOR_TAG = "director";
-    public static final String SEMANTIC_YEAR_TAG = "year";
-    public static final String SEMANTIC_CATEGORY_TAG = "category";
-    public static final String SEMANTIC_TAG_TAG = "tag";
-    public static final String SEMANTIC_RATE_TAG = "rate";
-    public static final String SEMANTIC_AWARD_TAG = "award";
-    public static final String SEMANTIC_ROLE_TAG = "role";
-    public static final String SEMANTIC_AREA_TAG = "area";
-    public static final String SEMANTIC_TYPE_TAG = "type";
-    public static final String SEMANTIC_SUBAWARD_TAG = "sub_award";
-    public static final String SEMANTIC_LANGUAGE_TAG = "language";
-    public static final String SEMANTIC_PUBLISHER_TAG = "publisher";
-    public static final String SEMANTIC_EPISODE_TAG = "episode";
-    public static final String SEMANTIC_SEASON_TAG = "season";
-    public static final String SEMANTIC_PART_TAG = "part";
-    public static final String SEMANTIC_TERM_TAG = "term";
+    //Template and Modify
+    public static final String VIDEO_QUERY_TEMPLATE_TAG = "Case1:";
+    public static final String VIDEO_QUERY_COMMON_TEMPLATE_TAG = "Case2:";
+    public static final String U_DIST_TEMPLATE_TAG = "Case3:";
+    public static final String SELECT_TEMPLATE_TAG = "Case4:";
+    public static final String TV_SET_TEMPLATE_TAG = "Case5:";
+    public static final String BEFORE_TAG = "Case6:";
+    public static final String AFTER_TAG = "Case7:";
     
-    //Template
-    public static final String WITH_NAME_TAG = "Case1";
-    public static final String SINGLE_ELEMENT_TAG = "Case2";
-    public static final String TWICE_ELEMENT_TAG = "Case3";
-    public static final String TRIPLE_AND_ABOVE_ELEMENT_TAG = "Case4";
-    public static final String SELECT_TAG = "Case5";
-    public static final String U_DISK_TAG = "Case6";
-    public static final String TV_SET_TAG = "Case7";
-    public static final String BEFORE_TAG = "Case8";
-    public static final String AFTER_TAG = "Case9";
+    public static final String TYPE_MODIFY_TAG = "Case8:";
     
-    public static final String NAME_TEMPLATE_TAG = "<Name>";
-    public static final String ACTOR_TEMPLATE_TAG = "<Actor>";
-    public static final String DIRECTOR_TEMPLATE_TAG = "<Director>";
-    public static final String YEAR_TEMPLATE_TAG = "<Year>";
-    public static final String CATEGORY_TEMPLATE_TAG = "<Category>";
-    public static final String TAG_TEMPLATE_TAG = "<Tag>";
-    public static final String RATE_TEMPLATE_TAG = "<Rate>";
-    public static final String AWARD_TEMPLATE_TAG = "<Award>";
-    public static final String ROLE_TEMPLATE_TAG = "<Role>";
-    public static final String AREA_TEMPLATE_TAG = "<Area>";
-    public static final String TYPE_TEMPLATE_TAG = "<Type>";
-    public static final String SUBAWARD_TEMPLATE_TAG = "<SubAward>";
-    public static final String LANGUAGE_TEMPLATE_TAG = "<Language>";
-    public static final String PUBLISHER_TEMPLATE_TAG = "<Publisher>";
-    public static final String BEFORE_TEMPLATE_TAG = "<Before>";
-    
-    //Modify
-    public static final String TYPE_MODIFY_TAG = "Case10";
+    private static final String TEMPLATE_ELEMENT_START_TAG = "<$";
+    private static final String TEMPLATE_ELEMENT_END_TAG = "$>";
     
     private static final String MODIFY_START_TAG = "<";
     private static final String MODIFY_END_TAG = ">";
     private static final String MODIFY_SPLIT_TAG = ",";
+        
+    private static final String[] allTemplateAndModifyTags = {VIDEO_QUERY_TEMPLATE_TAG, VIDEO_QUERY_COMMON_TEMPLATE_TAG, 
+            U_DIST_TEMPLATE_TAG, SELECT_TEMPLATE_TAG, TV_SET_TEMPLATE_TAG, BEFORE_TAG, AFTER_TAG, TYPE_MODIFY_TAG};
     
-    private static final String[] allTagList = {WITH_NAME_TAG, SINGLE_ELEMENT_TAG, TWICE_ELEMENT_TAG,
-            TRIPLE_AND_ABOVE_ELEMENT_TAG, SELECT_TAG, U_DISK_TAG, TV_SET_TAG, BEFORE_TAG, AFTER_TAG, TYPE_MODIFY_TAG};
-    private static Set<String> allTagSet;
-    
-    private static final String[] allTemplateTagList = {NAME_TEMPLATE_TAG, ACTOR_TEMPLATE_TAG, DIRECTOR_TEMPLATE_TAG,
-            YEAR_TEMPLATE_TAG, CATEGORY_TEMPLATE_TAG, TAG_TEMPLATE_TAG, RATE_TEMPLATE_TAG, AWARD_TEMPLATE_TAG,
-            ROLE_TEMPLATE_TAG, AREA_TEMPLATE_TAG, TYPE_TEMPLATE_TAG, SUBAWARD_TEMPLATE_TAG, LANGUAGE_TEMPLATE_TAG,
-            PUBLISHER_TEMPLATE_TAG, BEFORE_TEMPLATE_TAG};
-    private static Set<String> allTemplateTagSet;
-    
-    private static Map<String, String> modifyKeyToTagMap;
+    private static Set<String> allTemplateAndModifyTagSet;
     
     private static Random random = new Random();
     
     static
     {
-        allTagSet = new HashSet<String>();
-        for (String tag : allTagList)
+        allTemplateAndModifyTagSet = new HashSet<String>();
+        for (String tag : allTemplateAndModifyTags)
         {
-            allTagSet.add(tag);
-        }
-        allTemplateTagSet = new HashSet<String>();
-        for (String templateTag : allTemplateTagList)
-        {
-            allTemplateTagSet.add(templateTag);
+            allTemplateAndModifyTagSet.add(tag);
         }
         loadConfigs();
-        modifyKeyToTagMap = new HashMap<String, String>();
-        modifyKeyToTagMap.put(SEMANTIC_TYPE_TAG, TYPE_MODIFY_TAG);
     }
     
     public static void loadConfigs()
@@ -134,10 +84,13 @@ public class TemplateUtils
         try
         {
             String templateFile = ConfigManager.INSTANCE.getPropertyString(Constants.TEMPLATE_FILE_KEY);
-            Map<String, Map<String, List<String>>> templateMapTmp = new HashMap<String, Map<String, List<String>>>();
+            Map<String, Map<String, List<String>>> templateTagToTemplateElementsToTemplateListMapTmp = 
+                            new HashMap<String, Map<String, List<String>>>();
+            List<String> commonTemplateListTmp = new ArrayList<String>();
             List<String> beforeListTmp = new ArrayList<String>();
             List<String> afterListTmp = new ArrayList<String>();
-            Map<String, Map<String, List<String>>> modifyMapTmp = new HashMap<String, Map<String, List<String>>>();
+            Map<String, Map<String, List<String>>> templateTagToSemanticValueToModifyListMapTmp = 
+                            new HashMap<String, Map<String, List<String>>>();
             String currentTag = null;
             List<String> lines = FileUtils.readFile(templateFile);
             for (String line : lines)
@@ -147,7 +100,7 @@ public class TemplateUtils
                 {
                     continue;
                 }
-                if (allTagSet.contains(line))
+                if (allTemplateAndModifyTagSet.contains(line))
                 {
                     currentTag = line;
                     continue;
@@ -158,14 +111,13 @@ public class TemplateUtils
                 }
                 switch(currentTag)
                 {
-                case WITH_NAME_TAG:
-                case SINGLE_ELEMENT_TAG:
-                case TWICE_ELEMENT_TAG:
-                case TRIPLE_AND_ABOVE_ELEMENT_TAG:
-                case SELECT_TAG:
-                case U_DISK_TAG:
-                case TV_SET_TAG:
-                    loadTemplates(currentTag, line, templateMapTmp);
+                case VIDEO_QUERY_TEMPLATE_TAG:
+                case U_DIST_TEMPLATE_TAG:
+                case SELECT_TEMPLATE_TAG:
+                    loadTemplates(currentTag, line, templateTagToTemplateElementsToTemplateListMapTmp);
+                    break;
+                case VIDEO_QUERY_COMMON_TEMPLATE_TAG:
+                    loadTemplates1(line, commonTemplateListTmp);
                     break;
                 case BEFORE_TAG:
                     loadTemplates1(line, beforeListTmp);
@@ -174,17 +126,19 @@ public class TemplateUtils
                     loadTemplates1(line, afterListTmp);
                     break;
                 case TYPE_MODIFY_TAG:
-                    loadModify(currentTag, line, modifyMapTmp);
+                case TV_SET_TEMPLATE_TAG:
+                    loadModify(currentTag, line, templateTagToSemanticValueToModifyListMapTmp);
                     break;
                 default:
                     logger.error("unsupport tag " + currentTag);
                     break;
                 }
             }
-            templateMap = templateMapTmp;
+            templateTagToTemplateElementsToTemplateListMap = templateTagToTemplateElementsToTemplateListMapTmp;
+            commonTemplateList = commonTemplateListTmp;
             beforeList = beforeListTmp;
             afterList = afterListTmp;
-            modifyMap = modifyMapTmp;
+            templateTagToSemanticValueToModifyListMap = templateTagToSemanticValueToModifyListMapTmp;
         }
         finally
         {
@@ -192,34 +146,56 @@ public class TemplateUtils
         }
     }
     
-    private static void loadTemplates(String tag, String line, Map<String, Map<String, List<String>>> templateMapTmp)
+    private static void loadTemplates(String templateTag, String line, 
+            Map<String, Map<String, List<String>>> templateTagToTemplateElementsToTemplateListMapTmp)
     {
-        List<String> templateTagList = new ArrayList<String>();
-        for(String templateTag : allTemplateTagList)
-        {
-            if (line.contains(templateTag))
-            {
-                templateTagList.add(templateTag);
-            }
-        }
-        if (templateTagList.isEmpty())
+        List<String> templateElementTagList = getTemplateTagFromInput(line);
+        if (templateElementTagList == null || templateElementTagList.isEmpty())
         {
             return;
         }
-        Map<String, List<String>> singleTemplateMapTmp = templateMapTmp.get(tag);
-        if (singleTemplateMapTmp == null)
+        Map<String, List<String>> templateElementsToTemplateListMapTmp = templateTagToTemplateElementsToTemplateListMapTmp.get(templateTag);
+        if (templateElementsToTemplateListMapTmp == null)
         {
-            singleTemplateMapTmp = new HashMap<String, List<String>>();
-            templateMapTmp.put(tag, singleTemplateMapTmp);
+            templateElementsToTemplateListMapTmp = new HashMap<String, List<String>>();
+            templateTagToTemplateElementsToTemplateListMapTmp.put(templateTag, templateElementsToTemplateListMapTmp);
         }
-        String templateTagKey = generateTemplateTagKey(templateTagList);
-        List<String> tempalteList = singleTemplateMapTmp.get(templateTagKey);
+        String key = generateTemplateTagKey(templateElementTagList);
+        List<String> tempalteList = templateElementsToTemplateListMapTmp.get(key);
         if (tempalteList == null)
         {
             tempalteList = new ArrayList<String>();
-            singleTemplateMapTmp.put(templateTagKey, tempalteList);
+            templateElementsToTemplateListMapTmp.put(key, tempalteList);
         }
         tempalteList.add(line);
+    }
+    
+    private static List<String> getTemplateTagFromInput(String line)
+    {
+        if (StringUtils.isEmpty(line))
+        {
+            return null;
+        }
+        List<String> ret = new ArrayList<String>();
+        int startIndex = line.indexOf(TEMPLATE_ELEMENT_START_TAG);
+        int cursor = 0;
+        while(startIndex >= 0)
+        {
+            int endIndex = line.indexOf(TEMPLATE_ELEMENT_END_TAG, startIndex);
+            if (endIndex < 0)
+            {
+                return null;
+            }
+            String tempalteTag = line.substring(startIndex, endIndex + TEMPLATE_ELEMENT_END_TAG.length());
+            ret.add(tempalteTag.toLowerCase());
+            cursor = endIndex + TEMPLATE_ELEMENT_END_TAG.length();
+            if (cursor >= line.length())
+            {
+                break;
+            }
+            startIndex = line.indexOf(TEMPLATE_ELEMENT_START_TAG, cursor);
+        }
+        return ret;
     }
     
     private static void loadTemplates1(String line, List<String> arrrayList)
@@ -227,33 +203,45 @@ public class TemplateUtils
         arrrayList.add(line);
     }
     
-    private static void loadModify(String tag, String line, Map<String, Map<String, List<String>>> modifyMapTmp)
+    private static void loadModify(String templateTag, String line, 
+            Map<String, Map<String, List<String>>> templateTagToSemanticValueToModifyListMapTmp)
     {
-        Map<String, List<String>> singleModifyMapTmp = modifyMapTmp.get(tag);
-        if (singleModifyMapTmp == null)
+        Map<String, List<String>> semanticValueToModifyListMapTmp = 
+                templateTagToSemanticValueToModifyListMapTmp.get(templateTag);
+        if (semanticValueToModifyListMapTmp == null)
         {
-            singleModifyMapTmp = new HashMap<String, List<String>>();
-            modifyMapTmp.put(tag, singleModifyMapTmp);
+            semanticValueToModifyListMapTmp = new HashMap<String, List<String>>();
+            templateTagToSemanticValueToModifyListMapTmp.put(templateTag, semanticValueToModifyListMapTmp);
         }
         String modifyTag = getModifyTag(line);
         if (StringUtils.isEmpty(modifyTag))
         {
             return;
         }
-        List<String> typeModifyList = getModify(line);
-        if (typeModifyList == null || typeModifyList.isEmpty())
+        List<String> modifyList = getModify(line);
+        if (modifyList == null || modifyList.isEmpty())
         {
             return;
         }
-        List<String> modifyListTmp = singleModifyMapTmp.get(modifyTag);
+        List<String> modifyListTmp = semanticValueToModifyListMapTmp.get(modifyTag);
         if (modifyListTmp == null)
         {
             modifyListTmp = new ArrayList<String>();
-            singleModifyMapTmp.put(modifyTag, modifyListTmp);
+            semanticValueToModifyListMapTmp.put(modifyTag, modifyListTmp);
         }
-        modifyListTmp.addAll(typeModifyList);
+        modifyListTmp.addAll(modifyList);
     }
     
+    /**
+     * 截取修饰词头部信息
+     * 
+     * 例如: <爱情>动人的,感人的
+     * 
+     * 提取: 爱情
+     * 
+     * @param line
+     * @return
+     */
     private static String getModifyTag(String line)
     {
         int startIndex = line.indexOf(MODIFY_START_TAG);
@@ -269,6 +257,16 @@ public class TemplateUtils
         return line.substring(startIndex + 1, endIndex);
     }
     
+    /**
+     * 截取修饰词内容，并按照","来分割
+     * 
+     * 例如: <爱情>动人的,感人的
+     * 
+     * 提取: [动人的, 感人的]
+     * 
+     * @param line
+     * @return
+     */
     private static List<String> getModify(String line)
     {
         int startIndex = line.indexOf(MODIFY_END_TAG) + 1;
@@ -295,27 +293,33 @@ public class TemplateUtils
         }
         return key;
     }
-    
-    public static String getConfig(String tag, List<String> templateTags)
+   
+    /**
+     * 获取模板或者修饰词
+     * 
+     * @param templateTag
+     * @param templateElementTags
+     * @return
+     */
+    public static String getConfig(String templateTag, List<String> templateElementTags)
     {
-        switch(tag)
+        switch(templateTag)
         {
-        case WITH_NAME_TAG:
-        case SINGLE_ELEMENT_TAG:
-        case TWICE_ELEMENT_TAG:
-        case TRIPLE_AND_ABOVE_ELEMENT_TAG:
-        case SELECT_TAG:
-        case U_DISK_TAG:
-        case TV_SET_TAG:
-            return getTemplates(tag, templateTags);
+        case VIDEO_QUERY_TEMPLATE_TAG:
+        case U_DIST_TEMPLATE_TAG:
+        case SELECT_TEMPLATE_TAG:
+            return getTemplates(templateTag, templateElementTags);
+        case VIDEO_QUERY_COMMON_TEMPLATE_TAG:
+            return getCommonTemplate();
         case BEFORE_TAG:
             return getBefore();
         case AFTER_TAG:
             return getAfter();
         case TYPE_MODIFY_TAG:
-            return getModify(tag, templateTags);
+        case TV_SET_TEMPLATE_TAG:
+            return getModify(templateTag, templateElementTags);
         default:
-            logger.error("unsupport tag " + tag);
+            logger.error("unsupport tag " + templateTag);
             return null;
         }
     }
@@ -326,19 +330,25 @@ public class TemplateUtils
         {
             return null;
         }
-        Map<String, List<String>> singleTemplateMap = templateMap.get(tag);
-        if (singleTemplateMap == null)
+        Map<String, List<String>> templateElementsToTemplateListMap = templateTagToTemplateElementsToTemplateListMap.get(tag);
+        if (templateElementsToTemplateListMap == null)
         {
             return null;
         }
         String key = generateTemplateTagKey(templateTags);
-        List<String> templateList = singleTemplateMap.get(key);
+        List<String> templateList = templateElementsToTemplateListMap.get(key);
         if (templateList == null || templateList.isEmpty())
         {
             return null;
         }
         int randomIndex = random.nextInt(templateList.size());
         return templateList.get(randomIndex);
+    }
+    
+    private static String getCommonTemplate()
+    {
+        int randomIndex = random.nextInt(commonTemplateList.size());
+        return commonTemplateList.get(randomIndex);
     }
     
     private static String getBefore()
@@ -353,26 +363,19 @@ public class TemplateUtils
         return afterList.get(randomIndex);
     }
     
-    /**
-     * 
-     * 
-     * @param tag  这里的semantic中的key
-     * @param typeList
-     * @return
-     */
-    private static String getModify(String tag, List<String> typeList)
+    private static String getModify(String modifyTag, List<String> semanticValueList)
     {
-        if (StringUtils.isEmpty(tag) || typeList == null || typeList.isEmpty())
+        if (StringUtils.isEmpty(modifyTag) || semanticValueList == null || semanticValueList.isEmpty())
         {
             return null;
         }
-        Map<String, List<String>> singleModifyMap = modifyMap.get(tag);
-        if (singleModifyMap == null)
+        Map<String, List<String>> semanticValueToModifyListMap = templateTagToSemanticValueToModifyListMap.get(modifyTag);
+        if (semanticValueToModifyListMap == null)
         {
             return null;
         }
-        String type = typeList.get(0);
-        List<String> modifyList = singleModifyMap.get(type);
+        String semanticValue = semanticValueList.get(0);
+        List<String> modifyList = semanticValueToModifyListMap.get(semanticValue);
         if (modifyList == null || modifyList.isEmpty())
         {
             return null;
@@ -381,8 +384,13 @@ public class TemplateUtils
         return modifyList.get(randomIndex);
     }
     
-    public static String tryGetModifyTag(String tag)
+    public static String convertSemanticTagToTemplateTag(String semanticTag)
     {
-        return modifyKeyToTagMap.get(tag);
+        return TEMPLATE_ELEMENT_START_TAG + semanticTag.toLowerCase() + TEMPLATE_ELEMENT_END_TAG;
+    }
+    
+    public static boolean hasModifyWithTemplateElementTag(String templateElementTag)
+    {
+        return templateTagToSemanticValueToModifyListMap.get(templateElementTag) != null;
     }
 }
