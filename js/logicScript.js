@@ -208,11 +208,11 @@ function getReply(data)
 
 function getReplyForVideoQuery(semantic)
 {
-	if (semantic.get("source") != null)
+	if (semantic.get(SOURCE_TEMPLATE_ELEMENT_TAG) != null)
 	{
 		return getReplyForVideoQueryWithUSB(semantic);
 	}
-	else if (semantic.get("name") != null)
+	else if (semantic.get(NAME_TEMPLATE_ELEMENT_TAG) != null)
 	{
 		return getReplyForVideoQueryWithName(semantic);
 	}
@@ -286,19 +286,20 @@ function getReplyForVideoQueryWithCommonTemplate(semantic)
  */
 function getReplyForVideoQueryWithUSB(semantic)
 {
+	service.translateSemanticValue(U_DIST_TEMPLATE_TAG, semantic);
 	var templateElementTagList = getTemplateElementTagList(usbDistTemplateFeature, semantic);
 	if (semantic.get(VALUE_ELEMENT_TAG) != null)
 	{
 		templateElementTagList.add(LIST_NUM_TEMPLATE_ELEMENT_TAG);
 	}
 	var template = getTemplate(U_DIST_TEMPLATE_TAG, templateElementTagList);
-	if (template == null)
+	if (service.isStringEmpty(template))
 	{
 		return "";
 	}
-	var modifyTagList = getModifyTagList(templateFeature, semantic);
+	var modifyTagList = getModifyTagList(usbDistTemplateFeature, semantic);
 	var modifyTagToModifyMap = getModify(modifyTagList, semantic);
-	return assembleReply(templateTag, templateFeature, templateElementTagList, template, modifyTagList, modifyTagToModifyMap, semantic);
+	return assembleReply(U_DIST_TEMPLATE_TAG, usbDistTemplateFeature, templateElementTagList, template, modifyTagList, modifyTagToModifyMap, semantic);
 }
 
 /**
@@ -309,20 +310,17 @@ function getReplyForVideoQueryWithUSB(semantic)
  */
 function getReplyForSelect(semantic)
 {
-	if (semantic.get(INDEX_ELEMENT_TAG) == null)
-	{
-		return "";
-	}
+	service.translateSemanticValue(SELECT_TEMPLATE_TAG, semantic);
 	var templateElementTagList = getTemplateElementTagList(selectTemplateFeature, semantic);
 	templateElementTagList.add(LIST_NUM_TEMPLATE_ELEMENT_TAG);
 	var template = getTemplate(SELECT_TEMPLATE_TAG, templateElementTagList);
-	if (template == null)
+	if (service.isStringEmpty(template))
 	{
 		return "";
 	}
-	var modifyTagList = getModifyTagList(templateFeature, semantic);
+	var modifyTagList = getModifyTagList(selectTemplateFeature, semantic);
 	var modifyTagToModifyMap = getModify(modifyTagList, semantic);
-	return assembleReply(templateTag, templateFeature, templateElementTagList, template, modifyTagList, modifyTagToModifyMap, semantic);
+	return assembleReply(SELECT_TEMPLATE_TAG, selectTemplateFeature, templateElementTagList, template, modifyTagList, modifyTagToModifyMap, semantic);
 }
 
 /**
@@ -373,21 +371,26 @@ function getReplyForTVSet(semantic)
 	{
 		return "";
 	}
+	service.translateSemanticValue(TV_SET_TEMPLATE_TAG, semantic);
 	var templateElementTagList = getTemplateElementTagList(tvSetTemplateFeature, semantic);
 	templateElementTagList.add(elementTag);
+	if (semantic.get(VALUE_ELEMENT_TAG) != null)
+	{
+		templateElementTagList.add(LIST_NUM_TEMPLATE_ELEMENT_TAG);
+	}
 	var template = getTemplate(TV_SET_TEMPLATE_TAG, templateElementTagList);
 	template = before + template;
 	if (template == null)
 	{
 		return "";
 	}
-	var modifyTagList = getModifyTagList(templateFeature, semantic);
+	var modifyTagList = getModifyTagList(tvSetTemplateFeature, semantic);
 	var modifyTagToModifyMap = getModify(modifyTagList, semantic);
-	return assembleReply(templateTag, templateFeature, templateElementTagList, template, modifyTagList, modifyTagToModifyMap, semantic);
+	return assembleReply(TV_SET_TEMPLATE_TAG, tvSetTemplateFeature, templateElementTagList, template, modifyTagList, modifyTagToModifyMap, semantic);
 }
 
 /**
- * 主流程，获取模板，获取修饰词，如果需要后缀，先尝试获取记忆播报内容，如果记忆播报没有，且没有修饰词，获取后缀
+ * 主流程，先拼接片名后缀，获取模板，获取修饰词，如果需要后缀，先尝试获取记忆播报内容，如果记忆播报没有，且没有修饰词，获取后缀
  * 
  * @param semantic
  * @param templateFeature
@@ -396,6 +399,7 @@ function getReplyForTVSet(semantic)
  */
 function getReplyBase(semantic, templateFeature, templateTag)
 {
+	service.translateSemanticValue(SELECT_TEMPLATE_TAG, semantic);
 	var templateElementTagList = getTemplateElementTagList(templateFeature, semantic);
 	var template = getTemplate(templateTag, templateElementTagList);
 	if (isStringEmpty(template))
@@ -425,7 +429,7 @@ function getTemplateElementTagList(templateFeature, semantic)
 	{
 		if (semantic.get(chooseTemplateElements[i]) != null)
 		{
-			templateElementTagList.add(chooseSemanticTagList[i]);
+			templateElementTagList.add(chooseTemplateElements[i]);
 			count ++;
 			if (maxTemplateElement > 0 && count >= maxTemplateElement)
 			{

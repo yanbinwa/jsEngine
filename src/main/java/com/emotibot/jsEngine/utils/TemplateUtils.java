@@ -154,6 +154,7 @@ public class TemplateUtils
         {
             return;
         }
+        line = adjustTemplateLine(line, templateElementTagList);
         Map<String, List<String>> templateElementsToTemplateListMapTmp = templateTagToTemplateElementsToTemplateListMapTmp.get(templateTag);
         if (templateElementsToTemplateListMapTmp == null)
         {
@@ -196,6 +197,34 @@ public class TemplateUtils
             startIndex = line.indexOf(TEMPLATE_ELEMENT_START_TAG, cursor);
         }
         return ret;
+    }
+    
+    /**
+     * 将template中的templateElementTag改写成小写
+     * 
+     * @param line
+     * @param templateElementTagList
+     * @return
+     */
+    private static String adjustTemplateLine(String line, List<String> templateElementTagList)
+    {
+        String ret = line.toLowerCase();
+        int start = 0;
+        for (String templateElementTag : templateElementTagList)
+        {
+            int index = ret.indexOf(templateElementTag, start);
+            if (index < 0)
+            {
+                break;
+            }
+            line = line.substring(0, index) + templateElementTag + line.substring(index + templateElementTag.length());
+            start = index + templateElementTag.length();
+            if (start >= line.length())
+            {
+                break;
+            }
+        }
+        return line;
     }
     
     private static void loadTemplates1(String line, List<String> arrrayList)
