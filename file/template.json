@@ -1,0 +1,46 @@
+[
+	{
+		"Type" : 1,
+		"FormatType" : 1,
+		"Description" : "求视频模板句",
+		"Data" : [
+			"<$Before$>由<$Director$>导演的<$Type$><$Category$>",
+			"<$Before$>由<$Director$>导演的<$Type$>片"
+		] 
+	},
+	{
+		"Type" : 2,
+		"FormatType" : 2,
+		"Description" : "求视频通用模板句",
+		"Data" : [
+			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$Award$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Category$>",
+			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$SubAward$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Category$>"
+		] 
+	},
+	{
+		"Type" : 3,
+		"FormatType" : 3,
+		"Description" : "TVSET模板句",
+		"Data" : [
+			"<VolumeUp>音量过高，听久了，会听见小鸟的叫声哦",
+			"<VolumeDown>你能听见我说我喜欢你吗"
+		] 
+	},
+	{
+		"Type" : 4,
+		"FormatType" : 4,
+		"Description" : "Type元素修饰词",
+		"Data" : [
+			"<爱情>动人的,感人的",
+			"<喜剧>笑果超燃的,爆笑的,"
+		] 
+	},
+	{
+		"Type" : 5,
+		"FormatType" : 5,
+		"Data" : [
+			"希望我的推荐有你所爱",
+			"精彩好剧为您悉数奉上"
+		]
+	}
+]
