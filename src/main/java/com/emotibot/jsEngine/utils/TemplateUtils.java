@@ -69,6 +69,10 @@ public class TemplateUtils
     
     private static Set<String> allTemplateAndModifyTagSet;
     
+    public static final String SEMANTIC_TYPE_TAG = "type";
+    
+    private static Map<String, String> templateElementTagToTemplateTagMap;
+    
     private static Random random = new Random();
     
     static
@@ -78,6 +82,8 @@ public class TemplateUtils
         {
             allTemplateAndModifyTagSet.add(tag);
         }
+        templateElementTagToTemplateTagMap = new HashMap<String, String>();
+        templateElementTagToTemplateTagMap.put(convertSemanticTagToTemplateTag(SEMANTIC_TYPE_TAG), TYPE_MODIFY_TAG);
         loadConfigs();
     }
     
@@ -465,8 +471,8 @@ public class TemplateUtils
         return TEMPLATE_ELEMENT_START_TAG + semanticTag.toLowerCase() + TEMPLATE_ELEMENT_END_TAG;
     }
     
-    public static boolean hasModifyWithTemplateElementTag(String templateElementTag)
+    public static String getModifyWithTemplateElementTag(String templateElementTag)
     {
-        return templateTagToSemanticValueToModifyListMap.get(templateElementTag) != null;
+        return templateElementTagToTemplateTagMap.get(templateElementTag);
     }
 }

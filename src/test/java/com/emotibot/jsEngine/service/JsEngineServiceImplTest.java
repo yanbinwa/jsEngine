@@ -13,21 +13,21 @@ public class JsEngineServiceImplTest
     public void test()
     {
         List<JsonObject> testCases = new ArrayList<JsonObject>();
-        testCases.add(getVideoQueryObj1());
-        testCases.add(getVideoQueryObj2());
-        testCases.add(getVideoQueryObj3());
+//        testCases.add(getVideoQueryObj1());
+//        testCases.add(getVideoQueryObj2());
+//        testCases.add(getVideoQueryObj3());
         testCases.add(getVideoQueryObj4());
-        testCases.add(getVideoQueryObj5());
-        testCases.add(getVideoQueryObj6());
-        testCases.add(getVideoQueryObj7());
-        testCases.add(getUSBObj1());
-        testCases.add(getUSBObj2());
-        testCases.add(getSelectObj1());
-        testCases.add(getSelectObj2());
-        testCases.add(getTVSetObj1());
-        testCases.add(getTVSetObj2());
-        testCases.add(getTVSetObj3());
-        testCases.add(getTVSetObj4());
+//        testCases.add(getVideoQueryObj5());
+//        testCases.add(getVideoQueryObj6());
+//        testCases.add(getVideoQueryObj7());
+//        testCases.add(getUSBObj1());
+//        testCases.add(getUSBObj2());
+//        testCases.add(getSelectObj1());
+//        testCases.add(getSelectObj2());
+//        testCases.add(getTVSetObj1());
+//        testCases.add(getTVSetObj2());
+//        testCases.add(getTVSetObj3());
+//        testCases.add(getTVSetObj4());
         JsEngineServiceImpl service = new JsEngineServiceImpl();
         for (JsonObject testCase : testCases)
         {
@@ -47,6 +47,7 @@ public class JsEngineServiceImplTest
         semanticObj.addProperty("category", "电影");
         semanticObj.addProperty("actor", "周星驰");
         semanticObj.addProperty("director", "周星驰");
+        semanticObj.addProperty("type", "喜剧");
         jsonObject.add("semantic", semanticObj);
         return jsonObject;
     }
@@ -87,10 +88,8 @@ public class JsEngineServiceImplTest
         jsonObject.addProperty("domain", "VIDEO");
         jsonObject.addProperty("intent", "QUERY");
         JsonObject semanticObj = new JsonObject();
-        semanticObj.addProperty("director", "王晶");
         semanticObj.addProperty("actor", "周星驰");
-        semanticObj.addProperty("category", "电影");
-        semanticObj.addProperty("tag", "美剧");
+        semanticObj.addProperty("type", "喜剧");
         jsonObject.add("semantic", semanticObj);
         return jsonObject;
     }

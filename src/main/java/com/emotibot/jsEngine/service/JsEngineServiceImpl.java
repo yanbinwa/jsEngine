@@ -110,11 +110,12 @@ public class JsEngineServiceImpl implements JsEngineService
                 continue;
             }
             String valueStr = (String) value;
-            if (TemplateUtils.hasModifyWithTemplateElementTag(modifyTag))
+            String templateTag = TemplateUtils.getModifyWithTemplateElementTag(modifyTag);
+            if (!StringUtils.isEmpty(templateTag))
             {
                 List<String> semanticValueList = new ArrayList<String>();
                 semanticValueList.add(valueStr);
-                String modify = TemplateUtils.getConfig(modifyTag, semanticValueList);
+                String modify = TemplateUtils.getConfig(templateTag, semanticValueList);
                 if (StringUtils.isEmpty(modify))
                 {
                     continue;
