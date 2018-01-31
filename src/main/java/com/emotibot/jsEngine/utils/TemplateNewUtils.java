@@ -20,7 +20,7 @@ import com.emotibot.middleware.utils.StringUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public class TemplateUtils
+public class TemplateNewUtils
 {
     private static Logger logger = Logger.getLogger(TemplateUtils.class);
     private static ReentrantLock lock = new ReentrantLock();

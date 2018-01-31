@@ -1,46 +1,110 @@
 [
 	{
-		"Type" : 1,
-		"FormatType" : 1,
-		"Description" : "求视频模板句",
+		"Type" : "0",
+		"FormatType" : "0",
+		"Description" : "前导词",
 		"Data" : [
-			"<$Before$>由<$Director$>导演的<$Type$><$Category$>",
-			"<$Before$>由<$Director$>导演的<$Type$>片"
+			"为您点播",
+			"为您播放"
 		] 
 	},
 	{
-		"Type" : 2,
-		"FormatType" : 2,
-		"Description" : "求视频通用模板句",
-		"Data" : [
-			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$Award$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Category$>",
-			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$SubAward$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Category$>"
-		] 
-	},
-	{
-		"Type" : 3,
-		"FormatType" : 3,
-		"Description" : "TVSET模板句",
-		"Data" : [
-			"<VolumeUp>音量过高，听久了，会听见小鸟的叫声哦",
-			"<VolumeDown>你能听见我说我喜欢你吗"
-		] 
-	},
-	{
-		"Type" : 4,
-		"FormatType" : 4,
-		"Description" : "Type元素修饰词",
-		"Data" : [
-			"<爱情>动人的,感人的",
-			"<喜剧>笑果超燃的,爆笑的,"
-		] 
-	},
-	{
-		"Type" : 5,
-		"FormatType" : 5,
+		"Type" : "1",
+		"FormatType" : "0",
+		"Description" : "结词",
 		"Data" : [
 			"希望我的推荐有你所爱",
 			"精彩好剧为您悉数奉上"
+		] 
+	},
+	{
+		"Type" : "2",
+		"FormatType" : "1",
+		"Description" : "求视频模板句",
+		"Data" : [
+			"<$Before$><$Name$>",
+			"<$Before$>由<$Actor$>出演的<$Name$>",
+			"<$Before$>由<$Director$>导演的<$Name$>",
+			"<$Before$><$Year$>上映的<$Name$>",
+			"<$Before$>由<$Director$>导演的<$Category$>",
+			"<$Before$>由<$Director$>导演的<$Tag$>",
+			"<$Before$>由<$Director$>导演的作品",
+			"<$Before$>由<$Actor$>出演的<$Category$>",
+			"<$Before$>由<$Actor$>出演的<$Tag$>",
+			"<$Before$>由<$Actor$>出演的作品",
+			"<$Before$><$Type$><$Category$>",
+			"<$Before$><$Type$><$Tag$>",
+			"<$Before$><$Type$>片",
+			"<$Before$><$Area$><$Category$>",
+			"<$Before$><$Year$>的<$Category$>",
+			"<$Before$><$Year$>的<$Tag$>",
+			"<$Before$>由<$Director$>导演的<$Type$><$Category$>",
+			"<$Before$>由<$Director$>导演的<$Type$>片",
+			"<$Before$>由<$Actor$>出演的<$Type$><$Category$>",
+			"<$Before$>由<$Actor$>出演的<$Type$>片",
+			"<$Before$>由<$Director$>导演的<$Actor$>出演的<$Category$>",
+			"<$Before$>由<$Director$>导演的<$Actor$>出演的<$Tag$>",
+			"<$Before$>由<$Director$>导演的<$Actor$>出演的作品",
+			"<$Before$>由<$Actor$><$Year$>出演的<$Category$>",
+			"<$Before$>由<$Actor$><$Year$>出演的<$Tag$>",
+			"<$Before$>由<$Actor$><$Year$>出演的作品",
+			"<$Before$><$Year$>上映的<$Type$><$Category$>",
+			"<$Before$><$Year$>上映的<$Type$>片",
+			"<$Before$><$Area$><$Type$><$Category$>",
+			"<$Before$><$Area$><$Type$>片",
+			"<$Before$><$Year$><$Area$><$Category$>",
+			"<$Before$><$Director$><$Type$>",
+			"<$Before$><$Year$><$Actor$>"
+		] 
+	},
+	{
+		"Type" : "3",
+		"FormatType" : "2",
+		"Description" : "求视频通用模板句",
+		"Data" : [
+			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$Award$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Category$>",
+			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$SubAward$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Category$>",
+			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$Award$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Tag$>",
+			"<$Before$>+<$Director$>指导+<$Actor$>主演+<$Rate$>的+获得了<$SubAward$>的+里面有<$Role$>的+<$Year$>上映的+<$Area$>+<$Type$>+<$Tag$>"
+		]
+	},
+	{
+		"Type" : "4",
+		"FormatType" : "1",
+		"Description" : "USB播视频",
+		"Data" : [
+			"<$Before$><$Source$>中的<$Name$>",
+			"<$Before$><$Source$>中的<$ListNum$>视频"
+		] 
+	},
+	{
+		"Type" : "5",
+		"FormatType" : "1",
+		"Description" : "点播视频",
+		"Data" : [
+			"<$Before$><$ListNum$>视频"
+		] 
+	},
+	{
+		"Type" : "6",
+		"FormatType" : "3",
+		"Description" : "TVSET模板句",
+		"Data" : [
+			"<VolumeUp>音量过高，听久了，会听见小鸟的叫声哦",
+			"<VolumeDown>你能听见我说我喜欢你吗",
+			"<LightUp>这么高的亮度，会有种直面阳光的感觉吧",
+			"<LightDown>亮度太低啦，不建议长时间观看哦"
+		] 
+	},
+	{
+		"Type" : "7",
+		"FormatType" : "3",
+		"Description" : "Type定制化结词",
+		"Data" : [
+			"<爱情>这部剧真的很感人哦",
+			"<爱情>它会让你潸然泪下的哦",
+			"<喜剧>它会让你笑破肚皮的呀",
+			"<喜剧>我超爱这部喜剧"
 		]
 	}
 ]

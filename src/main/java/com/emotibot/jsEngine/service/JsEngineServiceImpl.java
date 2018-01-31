@@ -95,32 +95,33 @@ public class JsEngineServiceImpl implements JsEngineService
      * @param str
      * @return
      */
-    public Map<String, String> getModifier(List<String> modifyTagList, Map<String, Object> semantic)
+    public Map<String, String> getModifier(List<String> templateElementTagList, Map<String, Object> semantic, Map<String, String> tempalteElementTagToModifyTagMap )
     {
         Map<String, String> ret = new HashMap<String, String>();
-        for(String modifyTag : modifyTagList)
+        for(String templateElementTag : templateElementTagList)
         {
-            if (!semantic.containsKey(modifyTag))
+            if (!semantic.containsKey(templateElementTag))
             {
                 continue;
             }
-            Object value = semantic.get(modifyTag);
+            Object value = semantic.get(templateElementTag);
             if (!(value instanceof String))
             {
                 continue;
             }
             String valueStr = (String) value;
-            String templateTag = TemplateUtils.getModifyWithTemplateElementTag(modifyTag);
-            if (!StringUtils.isEmpty(templateTag))
+            String modifyTag = tempalteElementTagToModifyTagMap.get(templateElementTag);
+            //通过config来获取修饰词
+            if (!StringUtils.isEmpty(modifyTag))
             {
-                List<String> semanticValueList = new ArrayList<String>();
-                semanticValueList.add(valueStr);
-                String modify = TemplateUtils.getConfig(templateTag, semanticValueList);
+                List<String> commonElementTagList = new ArrayList<String>();
+                commonElementTagList.add(valueStr);
+                String modify = getConfigByTag(modifyTag, commonElementTagList);
                 if (StringUtils.isEmpty(modify))
                 {
                     continue;
                 }
-                ret.put(modifyTag, modify);
+                ret.put(templateElementTag, modify);
             }
             else
             {
@@ -132,19 +133,24 @@ public class JsEngineServiceImpl implements JsEngineService
     }
     
     public String assembleReply(String template, List<String> templateElementTagList, 
-            List<String> chooseModifyTagList, Map<String, String> modifyTagToModifyMap, 
+            List<String> chooseModifyElementTagList, Map<String, String> modifyElementTagToModifyMap, 
             Map<String, Object> semantic)
     {
         String retStr = template;
         for(String templateElementTag : templateElementTagList)
         {
             String semanticValue = "";
+            //这里先判断是否为<$...$>的tag，如果不是，不处理
+            if (!TemplateUtils.isTemplateElementTag(templateElementTag))
+            {
+                continue;
+            }
             if (retStr.contains(templateElementTag))
             {
                 semanticValue += (String) semantic.get(templateElementTag);
-                if (chooseModifyTagList.contains(templateElementTag))
+                if (chooseModifyElementTagList.contains(templateElementTag))
                 {
-                    semanticValue = modifyTagToModifyMap.get(templateElementTag) + semanticValue;
+                    semanticValue = modifyElementTagToModifyMap.get(templateElementTag) + semanticValue;
                 }
                 retStr = retStr.replace(templateElementTag, semanticValue);
             }
@@ -158,24 +164,15 @@ public class JsEngineServiceImpl implements JsEngineService
     }
     
     /**
+     * 获取模板，修饰词，前导词和结词的接口
      * 
-     * @param tag  这个是模板的tag
+     * @param tempalteTag  这个是模板的tag
      * @param semantic
      * @return
      */
-    public String getTemplateByTag(String templateTag, List<String> chooseTemplateElementTag)
+    public String getConfigByTag(String templateTag, List<String> chooseTemplateElementTag)
     {
         return TemplateUtils.getConfig(templateTag, chooseTemplateElementTag);
-    }
-    
-    public String getBefore(String templateTag)
-    {
-        return TemplateUtils.getConfig(templateTag, null);
-    }
-    
-    public String getAfter(String templateTag)
-    {
-        return TemplateUtils.getConfig(templateTag, null);
     }
     
     public void logInfo(String msg)
@@ -208,13 +205,28 @@ public class JsEngineServiceImpl implements JsEngineService
         return Integer.parseInt(str);
     }
     
-    public void translateSemanticValue(String templateTag, Map<String, Object> semantic)
-    {
-        SemanticUtils.translateSemanticValue(templateTag, semantic);
-    }
-    
     public boolean isStringEmpty(String str)
     {
         return StringUtils.isEmpty(str);
+    }
+    
+    public void translateSemanticValueForVideoQuery(Map<String, Object> semantic)
+    {
+        SemanticUtils.translateSemanticValueForVideoQuery(semantic);
+    }
+    
+    public void translateSemanticValueForUSB(Map<String, Object> semantic)
+    {
+        SemanticUtils.translateSemanticValueForUSB(semantic);
+    }
+    
+    public void translateSemanticValueForSelectQuery(Map<String, Object> semantic)
+    {
+        SemanticUtils.translateSemanticValueForSelectQuery(semantic);
+    }
+    
+    public void translateSemanticValueForTVSet(Map<String, Object> semantic)
+    {
+        SemanticUtils.translateSemanticValueForTVSet(semantic);
     }
 }
