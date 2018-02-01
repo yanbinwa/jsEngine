@@ -1,0 +1,24 @@
+[
+	{
+		"tag" : "year",
+		"data" : [
+			{
+				"value" : "1990",
+				"synonym": "90年,1990年"
+			},
+			{
+				"value" : "1990至1999",
+				"synonym": "90年代"
+			}
+		]
+	},
+	{
+		"tag" : "source",
+		"data" : [
+			{
+				"value" : "MEDIA",
+				"synonym" : "U盘"
+			}
+		]
+	}
+]
