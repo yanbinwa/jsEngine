@@ -1,11 +1,11 @@
 package com.emotibot.jsEngine.service;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -15,10 +15,15 @@ import org.apache.log4j.Logger;
 
 import com.emotibot.jsEngine.common.Constants;
 import com.emotibot.jsEngine.element.InputElement;
+import com.emotibot.jsEngine.exception.ConfigNotFoundException;
+import com.emotibot.jsEngine.execute.JSTaskManager;
+import com.emotibot.jsEngine.helper.JsHelper;
+import com.emotibot.jsEngine.step.FetchModifyStep;
 import com.emotibot.jsEngine.utils.InputElementUtils;
-import com.emotibot.jsEngine.utils.SemanticUtils;
 import com.emotibot.jsEngine.utils.TemplateUtils;
 import com.emotibot.middleware.conf.ConfigManager;
+import com.emotibot.middleware.context.Context;
+import com.emotibot.middleware.utils.FileUtils;
 import com.emotibot.middleware.utils.JsonUtils;
 import com.emotibot.middleware.utils.StringUtils;
 
@@ -31,11 +36,18 @@ import com.emotibot.middleware.utils.StringUtils;
 public class JsEngineServiceImpl implements JsEngineService
 {
     private static Logger logger = Logger.getLogger(JsEngineServiceImpl.class);
-    private ScriptEngineManager manager = new ScriptEngineManager();
-    private String jsFilePath = ConfigManager.INSTANCE.getPropertyString(Constants.JS_FILE_KEY);
+    private ScriptEngineManager manager;
+    private String jsFilePath;
+    private JsHelper helper;
+    private FetchModifyStep fetchModifyStep;
+    
+    public JsEngineServiceImpl() throws ConfigNotFoundException
+    {
+        init();
+    }
     
     @Override
-    public String getReplay(String dataStr)
+    public String getReplay(String dataStr, String userid)
     {
         long startTime = System.currentTimeMillis();
         InputElement inputElement = (InputElement)JsonUtils.getObject(dataStr, InputElement.class);
@@ -48,9 +60,24 @@ public class JsEngineServiceImpl implements JsEngineService
         Map<String, Object> params = new HashMap<String, Object>();
         params.put(Constants.INPUT_ELEMENT_NAME, inputElement);
         params.put(Constants.SERVICE_NAME, this);
+        params.put(Constants.HELPER_NAME, helper);
+        params.put(Constants.USER_ID, userid);
         long endTime = System.currentTimeMillis();
         logger.info("cost time: [" + (endTime - startTime) + "]");
         return invokeJs(jsFilePath, params);
+    }
+    
+    private void init() throws ConfigNotFoundException
+    {
+        JSTaskManager jsTaskManager = new JSTaskManager();
+        jsTaskManager.start();
+        
+        jsFilePath = ConfigManager.INSTANCE.getPropertyString(Constants.JS_FILE_KEY);
+        helper = new JsHelper();
+        manager = new ScriptEngineManager();
+        
+        ExecutorService executorService = Executors.newFixedThreadPool(40);
+        fetchModifyStep = new FetchModifyStep(executorService);
     }
     
     /**
@@ -72,10 +99,13 @@ public class JsEngineServiceImpl implements JsEngineService
         }
         try
         {
-            String result = (String) engine.eval(new FileReader(jsFile));
+            String commonJsFile = ConfigManager.INSTANCE.getPropertyString(Constants.COMMON_JS_FILE_KEY);
+            String fileStr = FileUtils.readFileToString(commonJsFile);
+            fileStr += FileUtils.readFileToString(jsFile);
+            String result = (String) engine.eval(fileStr);
             return result;
         } 
-        catch (ScriptException | FileNotFoundException e)
+        catch (ScriptException e)
         {
             e.printStackTrace();
             return null;
@@ -83,150 +113,162 @@ public class JsEngineServiceImpl implements JsEngineService
     }   
     
     /**
-     * 这里是调用knowledge，用以返回特定对象的修饰词
+     * 所有的修饰词均来自Knowledge，不需要从Template中获取，这里需要多线程进行query
      * 
-     * 对于片名，在提取修饰语时，需要参考category的值，如果修饰语与category的值相左，则放弃修饰语
-     * 例如: 我想看大话西游电视版，修饰语中是经典电影大话西游，这时就会出现奇异
-     * 
-     * 目前有修饰语的tag为:name, actor, director, type
-     * 
-     * 这里需要并行处理，获取到
-     * 
-     * @param str
-     * @return
-     */
-    public Map<String, String> getModifier(List<String> templateElementTagList, Map<String, Object> semantic, Map<String, String> tempalteElementTagToModifyTagMap )
-    {
-        Map<String, String> ret = new HashMap<String, String>();
-        for(String templateElementTag : templateElementTagList)
-        {
-            if (!semantic.containsKey(templateElementTag))
-            {
-                continue;
-            }
-            Object value = semantic.get(templateElementTag);
-            if (!(value instanceof String))
-            {
-                continue;
-            }
-            String valueStr = (String) value;
-            String modifyTag = tempalteElementTagToModifyTagMap.get(templateElementTag);
-            //通过config来获取修饰词
-            if (!StringUtils.isEmpty(modifyTag))
-            {
-                List<String> commonElementTagList = new ArrayList<String>();
-                commonElementTagList.add(valueStr);
-                String modify = getConfigByTag(modifyTag, commonElementTagList);
-                if (StringUtils.isEmpty(modify))
-                {
-                    continue;
-                }
-                ret.put(templateElementTag, modify);
-            }
-            else
-            {
-                //TODO: 需要通过knowledge来调用，这里需要多线程处理
-                continue;
-            }
-        }
-        return ret;
-    }
-    
-    public String assembleReply(String template, List<String> templateElementTagList, 
-            List<String> chooseModifyElementTagList, Map<String, String> modifyElementTagToModifyMap, 
-            Map<String, Object> semantic)
-    {
-        String retStr = template;
-        for(String templateElementTag : templateElementTagList)
-        {
-            String semanticValue = "";
-            //这里先判断是否为<$...$>的tag，如果不是，不处理
-            if (!TemplateUtils.isTemplateElementTag(templateElementTag))
-            {
-                continue;
-            }
-            if (retStr.contains(templateElementTag))
-            {
-                semanticValue += (String) semantic.get(templateElementTag);
-                if (chooseModifyElementTagList.contains(templateElementTag))
-                {
-                    semanticValue = modifyElementTagToModifyMap.get(templateElementTag) + semanticValue;
-                }
-                retStr = retStr.replace(templateElementTag, semanticValue);
-            }
-            else
-            {
-                logger.error("should contains template element tag: " + templateElementTag + "; template is: " + template);
-                return null;
-            }
-        }
-        return retStr;
-    }
-    
-    /**
-     * 获取模板，修饰词，前导词和结词的接口
-     * 
-     * @param tempalteTag  这个是模板的tag
+     * @param templateElementTagList
      * @param semantic
      * @return
      */
-    public String getConfigByTag(String templateTag, List<String> chooseTemplateElementTag)
+    @SuppressWarnings("unchecked")
+    public Map<String, String> getModifier(List<String> templateElementTagList, Map<String, Object> semantic)
     {
-        return TemplateUtils.getConfig(templateTag, chooseTemplateElementTag);
+        if (templateElementTagList == null || templateElementTagList.isEmpty())
+        {
+            return null;
+        }
+        Map<String, String> modifyTagToValueMap = new HashMap<String, String>();
+        for (String modifyTag : templateElementTagList)
+        {
+            if (semantic.containsKey(modifyTag))
+            {
+                modifyTagToValueMap.put(modifyTag, (String)semantic.get(modifyTag));
+            }
+        }
+        if (modifyTagToValueMap.isEmpty())
+        {
+            return null;
+        }
+        Context context = new Context();
+        context.setValue(Constants.MODIFY_TAG_TO_VALUE_MAP_KEY, modifyTagToValueMap);
+        fetchModifyStep.execute(context);
+        Map<String, String> modifyTagToModifyMap = 
+                (Map<String, String>) context.getValue(Constants.MODIFY_TAG_TO_MODIFY_MAP_KEY);
+        return modifyTagToModifyMap;
     }
     
-    public void logInfo(String msg)
+    /**
+     * 1. 获取template
+     * 2. 提取template中的templateTag，获取该Tag的template，进行替换
+     * 3. 获取template中的templateElementTag，进行替换
+     * 
+     * @param templateTag
+     * @param semantic
+     * @return
+     */
+    public String getText(Map<String, Object> semantic, String templateTag, List<String> templateElementOrCommonElementTags)
     {
-        logger.info(msg);
+        //获取template
+        String template = getTemplate(templateTag, templateElementOrCommonElementTags);
+        if (StringUtils.isEmpty(template))
+        {
+            return null;
+        }
+        
+        //提取template中的templateTag，获取该Tag的template，进行替换
+        template = replaceTemplateTagInTemplate(template);
+        if (StringUtils.isEmpty(template))
+        {
+            return null;
+        }
+        
+        //获取template中的templateElementTag，进行替换
+        template = replaceTemplateElementTagInTemplate(template, semantic);
+        return template;
     }
     
-    public void logError(String msg)
+    public String getText(Map<String, Object> semantic, String templateTag, String commonTag)
     {
-        logger.error(msg);
+        List<String> commonElementTags = new ArrayList<String>();
+        commonElementTags.add(commonTag);
+        return getText(semantic, templateTag, commonElementTags);
     }
     
-    public Map<String, String> createEmptyMap()
+    public String getText(Map<String, Object> semantic, String templateTag)
     {
-        return new HashMap<String, String>();
+        return getText(semantic, templateTag, (List<String>)null);
     }
     
-    public List<String> createEmptyList()
+    
+    public String getTemplate(String templateTag)
     {
-        return new ArrayList<String>();
+        return getTemplate(templateTag, (String) null);
     }
     
-    public String getLowCaseString(String line)
+    public String getTemplate(String templateTag, String commonElementTag)
     {
-        return line.toLowerCase();
+        List<String> commonElementTags = new ArrayList<String>();
+        commonElementTags.add(commonElementTag);
+        return getTemplate(templateTag, commonElementTags);
     }
     
-    public int getIntFromString(String str)
+    public String getTemplate(String templateTag, List<String> templateOrCommonElementTags)
     {
-        return Integer.parseInt(str);
+        return TemplateUtils.getTemplate(templateTag, templateOrCommonElementTags);
     }
     
-    public boolean isStringEmpty(String str)
+    public String replaceTemplateTagInTemplate(String template)
     {
-        return StringUtils.isEmpty(str);
+        List<String> innerTemplateTags = TemplateUtils.getTemplateTagsFromInput(template);
+        if (innerTemplateTags != null)
+        {
+            for (String innerTemplateTag : innerTemplateTags)
+            {
+                String innerTemplate = getTemplate(innerTemplateTag);
+                if (StringUtils.isEmpty(template))
+                {
+                    logger.error("should contain innerTemplateTag: " + innerTemplateTag + "; tempalte is: " + template);
+                    return null;
+                }
+                template = template.replace(innerTemplateTag, innerTemplate);
+            }
+        }
+        return template;
     }
     
-    public void translateSemanticValueForVideoQuery(Map<String, Object> semantic)
+    public String replaceTemplateElementTagInTemplate(String template, Map<String, Object> semantic)
     {
-        SemanticUtils.translateSemanticValueForVideoQuery(semantic);
+        List<String> templateElementTags = TemplateUtils.getTemplateElementTagsFromInput(template);
+        if (templateElementTags != null)
+        {
+            for (String templateElementTag : templateElementTags)
+            {
+                if (!semantic.containsKey(templateElementTag))
+                {
+                    logger.error("should contain templateElementTag: " + templateElementTag + "; tempalte is: " + template + "; semantic is: " + semantic);
+                    return null;
+                }
+                String value = (String) semantic.get(templateElementTag);
+                String synonym = TemplateUtils.getSynonym(templateElementTag, value);
+                if (!StringUtils.isEmpty(synonym))
+                {
+                    value = synonym;
+                }
+                template = template.replace(TemplateUtils.buildTemplateElementTagWithBeginAndAfter(templateElementTag), value);
+            }
+        }
+        return template;
     }
     
-    public void translateSemanticValueForUSB(Map<String, Object> semantic)
+    public List<String> getTemplateElementTagsFromInput(String template, Map<String, Object> semantic)
     {
-        SemanticUtils.translateSemanticValueForUSB(semantic);
+        List<String> templateElementTags = TemplateUtils.getTemplateElementTagsFromInput(template);
+        if (templateElementTags == null)
+        {
+            return null;
+        }
+        List<String> chooseTemplateElementTags = new ArrayList<String>();
+        for (String templateElementTag : templateElementTags)
+        {
+            if (semantic.containsKey(templateElementTag))
+            {
+                chooseTemplateElementTags.add(templateElementTag);
+            }
+        }
+        return chooseTemplateElementTags;
     }
     
-    public void translateSemanticValueForSelectQuery(Map<String, Object> semantic)
+    public Object getPersonas(String userid)
     {
-        SemanticUtils.translateSemanticValueForSelectQuery(semantic);
-    }
-    
-    public void translateSemanticValueForTVSet(Map<String, Object> semantic)
-    {
-        SemanticUtils.translateSemanticValueForTVSet(semantic);
+        return null;
     }
 }

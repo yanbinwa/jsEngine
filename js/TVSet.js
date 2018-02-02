@@ -22,23 +22,35 @@ function getReply(semantic)
 	{
 		if (value > 50)
 		{
-			return service.getText(semantic, "VolumnTooHigh");
+			return getText(semantic, "TVSet", "VolumeTooHigh");
 		}
 		else if (value < 5)
 		{
-			return service.getText(semantic, "VolumnTooLow");
+			return getText(semantic, "TVSet", "VolumeTooLow");
 		}
 	}
 	else if (getOperands(semantic) == "OBJ_BRIGHTNESS")
 	{
 		if (value > 50)
 		{
-			return service.getText(semantic, "BrightTooHigh");
+			return getText(semantic, "TVSet", "BrightTooHigh");
 		}
 		else if (value < 5)
 		{
-			return service.getText(semantic, "BrightTooLow");
+			return getText(semantic, "TVSet", "BrightTooLow");
 		}
 	}
 	return null;
+}
+
+/** 执行main */
+if(isTriggered(data))
+{
+	var semantic = data.getSemantic();
+	var reply = getReply(semantic);
+	reply;
+}
+else
+{
+	null;
 }

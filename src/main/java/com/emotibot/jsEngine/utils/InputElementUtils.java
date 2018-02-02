@@ -13,7 +13,7 @@ import com.emotibot.jsEngine.element.InputElement;
 public class InputElementUtils
 {
     /**
-     * 将semantic中的key转换为templateElementTag
+     * 将semantic中的key转换成小写
      * 
      * @param element
      */
@@ -28,7 +28,7 @@ public class InputElementUtils
         Map<String, Object> newSemantic = new HashMap<String, Object>();
         for (Map.Entry<String, Object> entry : semantic.entrySet())
         {
-            newSemantic.put(TemplateUtils.convertSemanticTagToTemplateTag(entry.getKey()), entry.getValue());
+            newSemantic.put(entry.getKey().toLowerCase(), entry.getValue());
         }
         element.setSemantic(newSemantic);
     }

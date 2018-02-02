@@ -1,2 +1,9 @@
-JS_FILE=/Users/emotibot/Documents/workspace/other/jsEngine/js/videoQuery.js
-TEMPLATE_FILE=/Users/emotibot/Documents/workspace/other/jsEngine/file/template.json
+JS_FILE=/Users/liguorui/git/jsEngine/js/videoQuery.js
+TEMPLATE_FILE=/Users/liguorui/git/jsEngine/file/template.json
+
+CONSUL_SERVICE_URL_KEY=http://172.16.101.61:8500/
+CONSUL_KEY_PREFIX_KEY=idc/template
+
+JS_CORE_POOL_SIZE=8
+JS_MAX_MUM_SIZE=20
+JS_KEEP_ALIVE_TIME=300000

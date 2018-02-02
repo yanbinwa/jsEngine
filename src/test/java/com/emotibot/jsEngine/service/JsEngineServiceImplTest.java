@@ -5,23 +5,24 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.emotibot.jsEngine.exception.ConfigNotFoundException;
 import com.google.gson.JsonObject;
 
 public class JsEngineServiceImplTest
 {    
     @Test
-    public void test()
+    public void test() throws ConfigNotFoundException
     {
         List<JsonObject> testCases = new ArrayList<JsonObject>();
 //        testCases.add(getVideoQueryObj1());
 //        testCases.add(getVideoQueryObj2());
 //        testCases.add(getVideoQueryObj3());
-//        testCases.add(getVideoQueryObj4());
+        testCases.add(getVideoQueryObj4());
 //        testCases.add(getVideoQueryObj5());
 //        testCases.add(getVideoQueryObj6());
 //        testCases.add(getVideoQueryObj7());
 //        testCases.add(getUSBObj1());
-        testCases.add(getUSBObj2());
+//        testCases.add(getUSBObj2());
 //        testCases.add(getSelectObj1());
 //        testCases.add(getSelectObj2());
 //        testCases.add(getTVSetObj1());
@@ -31,7 +32,7 @@ public class JsEngineServiceImplTest
         JsEngineServiceImpl service = new JsEngineServiceImpl();
         for (JsonObject testCase : testCases)
         {
-            String ret = service.getReplay(testCase.toString());
+            String ret = service.getReplay(testCase.toString(), "111");
             System.out.println(ret);
         }
     }

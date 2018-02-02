@@ -1,3 +1,4 @@
+
 var LIST_NUMBER_TEMPLATE_ELEMENT_TAG = "list_number";
 
 /** 模板方法 */
@@ -23,24 +24,35 @@ function isTriggered(input)
 function getReply(semantic)
 {
 	translateSemanticValue(semantic);
+	helper.logInfo(LIST_NUMBER_TEMPLATE_ELEMENT_TAG);
 	if (hasSource(semantic) && hasName(semantic))
 	{
-		return serivce.getText(semantic, "Name_Source");
+		return getText(semantic, "Name_Source");
 	}
 	if (hasSource(semantic) && semantic.get(LIST_NUMBER_TEMPLATE_ELEMENT_TAG) != null)
 	{
-		return serivce.getText(semantic, "ListNumber_Source");
+		return getText(semantic, "Source_ListNumber");
 	}
 	if (semantic.get(LIST_NUMBER_TEMPLATE_ELEMENT_TAG) != null)
 	{
-		return service.getText(semantic, "ListNumber")
+		return getText(semantic, "ListNumber")
 	}
+	return null;
 }
 
 function translateSemanticValue(semantic)
 {
-	//1. 如果有value：U盘中的第一部
-	
-	//2. 如果有row或者index，播第几行第几个
-	
+	helper.addListNumber(semantic, "list_number");
+}
+
+/** 执行main */
+if(isTriggered(data))
+{
+	var semantic = data.getSemantic();
+	var reply = getReply(semantic);
+	reply;
+}
+else
+{
+	null;
 }
