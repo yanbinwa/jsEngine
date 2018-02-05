@@ -11,15 +11,9 @@ import java.net.URL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 从网络获取文本数据
- * @author tommy
- *
- */
-public class HttpUtils 
+public class HttpUtils
 {
-    
-    //private static final Logger logger = Logger.getLogger(HttpUtils.class);
+  //private static final Logger logger = Logger.getLogger(HttpUtils.class);
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class);
     private static final String HostAndPortRegex = ".*//([^/]+)/*";
     private static final int BufferSize = 4096;

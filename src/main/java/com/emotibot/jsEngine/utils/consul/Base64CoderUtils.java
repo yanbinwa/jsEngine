@@ -2,12 +2,9 @@ package com.emotibot.jsEngine.utils.consul;
 
 import java.lang.reflect.Method;
 
-/**
- * @author tommy
- *
- */
-public class Base64CoderUtil {
-    private Base64CoderUtil(){
+public class Base64CoderUtils
+{
+    private Base64CoderUtils(){
     }
 
     

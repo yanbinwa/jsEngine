@@ -1,19 +1,20 @@
 
-var LIST_NUMBER_TEMPLATE_ELEMENT_TAG = "list_number";
+var LIST_NUMBER_TEMPLATE_ELEMENT_TAG = "list_number".toLowerCase();
 
 /** 模板方法 */
 function isTriggered(input)
 {
+	var semantic = input.getSemantic();
 	if (input.getDomain() == "VIDEO" && input.getIntent() == "PLAY")
 	{
+		//如果点播返回结果包含source，其值必须为MEDIA，因为平台层会自动用"EPG"填充source
+		if (hasSource(semantic) && getSource(semantic) != "MEDIA")
+		{
+			return false;
+		}
 		return true;
 	}
 	if (input.getDomain() == "CONTROL" && input.getIntent() == "SELECT")
-	{
-		return true;
-	}
-	var semantic = input.getSemantic();
-	if (input.getDomain() == "VIDEO" && input.getIntent() == "QUERY" && hasSource(semantic))
 	{
 		return true;
 	}
@@ -42,7 +43,7 @@ function getReply(semantic)
 
 function translateSemanticValue(semantic)
 {
-	helper.addListNumber(semantic, "list_number");
+	helper.addListNumber(semantic, LIST_NUMBER_TEMPLATE_ELEMENT_TAG);
 }
 
 /** 执行main */

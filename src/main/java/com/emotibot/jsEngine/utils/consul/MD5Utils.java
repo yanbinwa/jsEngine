@@ -11,14 +11,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.MessageDigest;
 
-/**
- * md5生成工具
- * 
- * @author tommy
- *
- */
-public class MD5Util {
-
+public class MD5Utils
+{
     /**
      * 为文件生成md5码
      * 
@@ -133,11 +127,4 @@ public class MD5Util {
             return null;
         }
     }
-
-    public static void main(String[] args) {
-        String str = "2016_Emotibot_HelloWorld！";
-        String md5 = MD5Util.getMd5ForStr(str);
-        System.out.println(md5);
-    }
 }
-

@@ -11,8 +11,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
-import com.emotibot.jsEngine.common.Constants;
-import com.emotibot.middleware.conf.ConfigManager;
 import com.emotibot.middleware.utils.FileUtils;
 import com.emotibot.middleware.utils.JsonUtils;
 import com.emotibot.middleware.utils.StringUtils;
@@ -22,6 +20,8 @@ import com.google.gson.JsonObject;
 /**
  * 加载模板
  * 加载同义词
+ * 
+ * 不同的appid对应不同的template
  * 
  * @author emotibot
  *
@@ -44,17 +44,17 @@ public class TemplateUtils
     /**
      * 数据格式0: 前导词和结词...
      */
-    private static Map<String, List<String>> format0Map;
+    private static Map<String, Map<String, List<String>>> format0Map = new HashMap<String, Map<String, List<String>>>();
     /**
      * 数据格式2: 通用模板句...
      */
-    private static Map<String, List<String>> format1Map;
+    private static Map<String, Map<String, List<String>>> format1Map = new HashMap<String, Map<String, List<String>>>();
     /**
      * 数据格式3: TVSet模板句,Type自定义后缀...
      */
-    private static Map<String, Map<String, List<String>>> format2Map;
+    private static Map<String, Map<String, Map<String, List<String>>>> format2Map = new HashMap<String, Map<String, Map<String, List<String>>>>();
     
-    private static Map<String, String> templateTagToFormatMap;
+    private static Map<String, Map<String, String>> templateTagToFormatMap = new HashMap<String, Map<String, String>>();
     
     private static final String COMMON_START_TAG = "<";
     private static final String COMMON_END_TAG = ">";
@@ -79,7 +79,7 @@ public class TemplateUtils
     
     private static final String SYNONYM_SPLIT_TAG = ",";
     
-    private static Map<String, Map<String, List<String>>> synonymMap;
+    private static Map<String, Map<String, Map<String, List<String>>>> synonymMap = new HashMap<String, Map<String, Map<String, List<String>>>>();
     
     static
     {
@@ -88,19 +88,15 @@ public class TemplateUtils
         {
             supportFormatTypeSet.add(formatType);
         }
-        String templateFile = ConfigManager.INSTANCE.getPropertyString(Constants.TEMPLATE_FILE_KEY);
-        loadConfigsFromFile(templateFile);
-        String synonymFile = ConfigManager.INSTANCE.getPropertyString(Constants.SYNONYM_FILE_KEY);
-        loadSynonymFromFile(synonymFile);
     }
     
-    public static void loadConfigsFromFile(String filePath)
+    public static void loadConfigsFromFile(String appid, String filePath)
     {
         String jsonString = FileUtils.readFileToString(filePath);
-        loadConfigs(jsonString);
+        loadConfigs(appid, jsonString);
     }
     
-    public static void loadConfigs(String jsonString)
+    public static void loadConfigs(String appid, String jsonString)
     {
         if (StringUtils.isEmpty(jsonString)) 
         {
@@ -145,10 +141,10 @@ public class TemplateUtils
                 }
                 templateTagToFormatMapTmp.put(tempalteType, formatType);
             }
-            format0Map = format0MapTmp;
-            format1Map = format1MapTmp;
-            format2Map = format2MapTmp;
-            templateTagToFormatMap = templateTagToFormatMapTmp;
+            format0Map.put(appid, format0MapTmp);
+            format1Map.put(appid, format1MapTmp);
+            format2Map.put(appid, format2MapTmp);
+            templateTagToFormatMap.put(appid, templateTagToFormatMapTmp);
         }
         catch (Exception e)
         {
@@ -277,13 +273,13 @@ public class TemplateUtils
         return line.substring(startIndex + 1, endIndex);
     }
     
-    public static void loadSynonymFromFile(String filePath)
+    public static void loadSynonymFromFile(String appid, String filePath)
     {
         String jsonString = FileUtils.readFileToString(filePath);
-        loadSynonym(jsonString);
+        loadSynonym(appid, jsonString);
     }
     
-    public static void loadSynonym(String jsonString)
+    public static void loadSynonym(String appid, String jsonString)
     {
         if (StringUtils.isEmpty(jsonString))
         {
@@ -341,7 +337,7 @@ public class TemplateUtils
                     }
                 }
             }
-            synonymMap = synonymMapTmp;
+            synonymMap.put(appid, synonymMapTmp);
         }
         catch (Exception e)
         {
@@ -361,9 +357,18 @@ public class TemplateUtils
      * @param templateElementTags
      * @return
      */
-    public static String getTemplate(String templateTag, List<String> templateOrCommonElementTags)
+    public static String getTemplate(String appid, String templateTag, List<String> templateOrCommonElementTags)
     {
-        String formatType = templateTagToFormatMap.get(templateTag);
+        Map<String, List<String>> format0MapTmp = format0Map.get(appid);
+        Map<String, List<String>> format1MapTmp = format1Map.get(appid);
+        Map<String, Map<String, List<String>>> format2MapTmp = format2Map.get(appid);
+        Map<String, String> templateTagToFormatMapTmp = templateTagToFormatMap.get(appid);
+        if(templateTagToFormatMapTmp == null)
+        {
+            logger.error("templateTagToFormatMapTmp is empty. appid: " +  appid);
+            return null;
+        }
+        String formatType = templateTagToFormatMapTmp.get(templateTag);
         if (StringUtils.isEmpty(formatType))
         {
             logger.error("unsupport format type. template tag is: " +  templateTag);
@@ -372,11 +377,11 @@ public class TemplateUtils
         switch(formatType)
         {
         case FORMAT_TYPE_0:
-            return getConfigForFormatType0(templateTag, format0Map);
+            return getConfigForFormatType0(templateTag, format0MapTmp);
         case FORMAT_TYPE_1:
-            return getConfigForFormatType1(templateTag, templateOrCommonElementTags, format1Map);
+            return getConfigForFormatType1(templateTag, templateOrCommonElementTags, format1MapTmp);
         case FORMAT_TYPE_2:
-            return getConfigForFormatType2(templateTag, templateOrCommonElementTags, format2Map);
+            return getConfigForFormatType2(templateTag, templateOrCommonElementTags, format2MapTmp);
         }
         return null;
     }
@@ -384,6 +389,10 @@ public class TemplateUtils
     @SuppressWarnings("unchecked")
     private static String getConfigForFormatType0(String templateTag, Object map)
     {
+        if (map == null)
+        {
+            return null;
+        }
         Map<String, List<String>> formatMap = (Map<String, List<String>>) map;
         List<String> templateList = formatMap.get(templateTag);
         if (templateList == null || templateList.isEmpty())
@@ -397,6 +406,10 @@ public class TemplateUtils
     @SuppressWarnings("unchecked")
     private static String getConfigForFormatType1(String templateTag, List<String> templateElementTags, Object map)
     {
+        if (map == null)
+        {
+            return null;
+        }
         Map<String, List<String>> formatMap = (Map<String, List<String>>) map;
         if (templateElementTags == null || templateElementTags.isEmpty())
         {
@@ -450,6 +463,10 @@ public class TemplateUtils
     @SuppressWarnings("unchecked")
     private static String getConfigForFormatType2(String templateTag, List<String> commonElementTags, Object map)
     {
+        if (map == null)
+        {
+            return null;
+        }
         Map<String, Map<String, List<String>>> formatMap = (Map<String, Map<String, List<String>>>) map;
         if (commonElementTags == null || commonElementTags.isEmpty())
         {
@@ -566,13 +583,19 @@ public class TemplateUtils
         return ret;
     }
     
-    public static String getSynonym(String templateElementTag, String value)
+    public static String getSynonym(String appid, String templateElementTag, String value)
     {
-        if (StringUtils.isEmpty(templateElementTag) || StringUtils.isEmpty(value))
+        if (StringUtils.isEmpty(appid) || StringUtils.isEmpty(templateElementTag) || StringUtils.isEmpty(value))
+        {
+            logger.error("appid or templateElementTag or value is empty");
+            return null;
+        }
+        Map<String, Map<String, List<String>>> synonymMapTmp = synonymMap.get(appid);
+        if (synonymMapTmp == null)
         {
             return null;
         }
-        Map<String, List<String>> templateElementValueToSynonymListMap = synonymMap.get(templateElementTag);
+        Map<String, List<String>> templateElementValueToSynonymListMap = synonymMapTmp.get(templateElementTag);
         if (templateElementValueToSynonymListMap == null)
         {
             return null;

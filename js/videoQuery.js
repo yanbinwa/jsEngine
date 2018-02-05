@@ -1,3 +1,256 @@
+/** 模板元素的标志，大小写不敏感 */
+var NAME_TEMPLATE_ELEMENT_TAG = "name".toLowerCase();
+var LIKELY_NAME_TEMPLATE_ELEMENT_TAG = "likely_name".toLowerCase();
+var ACTOR_TEMPLATE_ELEMENT_TAG = "actor".toLowerCase();
+var DIRECTOR_TEMPLATE_ELEMENT_TAG = "director".toLowerCase();
+var TYPE_TEMPLATE_ELEMENT_TAG = "type".toLowerCase();
+var AREA_TEMPLATE_ELEMENT_TAG = "area".toLowerCase();
+var YEAR_TEMPLATE_ELEMENT_TAG = "year".toLowerCase();
+var ROLE_TEMPLATE_ELEMENT_TAG = "role".toLowerCase();
+var LANGUAGE_TEMPLATE_ELEMENT_TAG = "language".toLowerCase();
+var RATE_TEMPLATE_ELEMENT_TAG = "rate".toLowerCase();
+var PUBLISHER_TEMPLATE_ELEMENT_TAG = "publisher".toLowerCase();
+var AWARD_TEMPLATE_ELEMENT_TAG = "award".toLowerCase();
+var SUBAWARD_TEMPLATE_ELEMENT_TAG = "sub_award".toLowerCase();
+var CATEGORY_TEMPLATE_ELEMENT_TAG = "category".toLowerCase();
+var TAG_TEMPLATE_ELEMENT_TAG = "tag".toLowerCase();
+var SOURCE_TEMPLATE_ELEMENT_TAG = "source".toLowerCase();
+var VALUE_TEMPLATE_ELEMENT_TAG = "value".toLowerCase();
+var OPERANDS_TEMPLATE_ELEMENT_TAG = "operands".toLowerCase();
+var DIRECT_TEMPLATE_ELEMENT_TAG = "direct".toLowerCase();
+var EPISODE_TEMPLATE_ELEMENT_TAG = "episode".toLowerCase();
+
+var END_TEMPLATE_TAG = "<$End$>".toLowerCase();
+
+function hasName(semantic)
+{
+	return semantic.get(NAME_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getName(semantic)
+{
+	return semantic.get(NAME_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasLikelyName(semantic)
+{
+	return semantic.get(NAME_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getLikelyName(semantic)
+{
+	return semantic.get(NAME_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasActor(semantic)
+{
+	return semantic.get(ACTOR_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getActor(semantic)
+{
+	return semantic.get(ACTOR_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasDirector(semantic)
+{
+	return semantic.get(DIRECTOR_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getDirector(semantic)
+{
+	return semantic.get(DIRECTOR_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasType(semantic)
+{
+	return semantic.get(TYPE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getType(semantic)
+{
+	return semantic.get(TYPE_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasArea(semantic)
+{
+	return semantic.get(AREA_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getArea(semantic)
+{
+	return semantic.get(AREA_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasYear(semantic)
+{
+	return semantic.get(YEAR_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getYear(semantic)
+{
+	return semantic.get(YEAR_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasRole(semantic)
+{
+	return semantic.get(ROLE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getRole(semantic)
+{
+	return semantic.get(ROLE_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasLanguage(semantic)
+{
+	return semantic.get(LANGUAGE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getLanguage(semantic)
+{
+	return semantic.get(LANGUAGE_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasRate(semantic)
+{
+	return semantic.get(RATE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getRate(semantic)
+{
+	return semantic.get(RATE_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasPublisher(semantic)
+{
+	return semantic.get(PUBLISHER_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getPublisher(semantic)
+{
+	return semantic.get(PUBLISHER_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasAward(semantic)
+{
+	return semantic.get(AWARD_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getAward(semantic)
+{
+	return semantic.get(AWARD_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasSubAward(semantic)
+{
+	return semantic.get(SUBAWARD_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getSubAward(semantic)
+{
+	return semantic.get(SUBAWARD_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasCategory(semantic)
+{
+	return semantic.get(CATEGORY_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getCategory(semantic)
+{
+	return semantic.get(CATEGORY_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasTag(semantic)
+{
+	return semantic.get(TAG_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getTag(semantic)
+{
+	return semantic.get(TAG_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasSource(semantic)
+{
+	return semantic.get(SOURCE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getSource(semantic)
+{
+	return semantic.get(SOURCE_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasValue(semantic)
+{
+	return semantic.get(VALUE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getValue(semantic)
+{
+	return semantic.get(VALUE_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasOperands(semantic)
+{
+	return semantic.get(OPERANDS_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getOperands(semantic)
+{
+	return semantic.get(OPERANDS_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasDirect(semantic)
+{
+	return semantic.get(DIRECT_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getDirect(semantic)
+{
+	return semantic.get(DIRECT_TEMPLATE_ELEMENT_TAG);
+}
+
+function hasEpisode(semantic)
+{
+	return semantic.get(EPISODE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getEpisode(semantic)
+{
+	return semantic.get(EPISODE_TEMPLATE_ELEMENT_TAG);
+}
+
+/**
+ * 直接播报Format0模板
+ */
+function getText(semantic, templateTag)
+{
+	return service.getText(appid, semantic, templateTag);
+}
+
+/**
+ * 直接播报Format1和2模板，根据templateElementTags的类型
+ * 
+ * 1. 如果为List<String>, 播报Format1
+ * 2. 如果为String, 播报Format2
+ * 
+ */
+function getText(semantic, templateTag, templateElementTags)
+{
+	return service.getText(appid, semantic, templateTag, templateElementTags);
+}
+
+
+function isEmptyStr(line)
+{
+	if (line == null || line.trim() == "")
+	{
+		return true;
+	}
+	return false;
+}
 
 /** 模板方法 */
 function isTriggered(input)
@@ -19,7 +272,7 @@ function isTriggered(input)
  * 2. 判断是否有name，如果有，走getReplyWithName
  * 3. 判断其他重要参数的个数，根据不同的参数走不同的路径
  * 
- * 模板方法 
+ * 模板方法
  */
 function getReply(semantic)
 {
@@ -77,7 +330,28 @@ function translateSemanticValue(semantic)
 		semantic.remove(TAG_TEMPLATE_ELEMENT_TAG);
 	}
 	
-	//4. 将片名和片名后缀合并
+	//4. 如果actor中有两个以上，选择两个，改写为XXX和XXX，同时不为actor加修饰词
+	if (hasActor(semantic))
+	{
+		var actorList = getActor(semantic).split(",");
+		if (actorList.length >= 2)
+		{
+			semantic.put(ACTOR_TEMPLATE_ELEMENT_TAG, actorList[0] + "和" + actorList[1]);
+			needModifyForActor = false;
+		}
+	}
+	
+	//5. 如果含有episode，并且值为"-1", 改写值为"最新一集"
+	if (hasEpisode(semantic))
+	{
+		var episode = getEpisode(semantic);
+		if (episode == "-1")
+		{
+			semantic.put(EPISODE_TEMPLATE_ELEMENT_TAG, "最新一集");
+		}
+	}
+	
+	//6. 将片名和片名后缀合并
 	helper.addNameProfix(semantic);
 }
 
@@ -204,8 +478,6 @@ function getReplyWithCommontTemplate(semantic)
 }
 
 
-
-
 /*********************************** START VideoQuery 特有的方法 ********************************/
 
 //播报中需要关注的semantic中的元素
@@ -214,8 +486,13 @@ var needElementTags = [NAME_TEMPLATE_ELEMENT_TAG, ACTOR_TEMPLATE_ELEMENT_TAG, DI
 	LANGUAGE_TEMPLATE_ELEMENT_TAG, RATE_TEMPLATE_ELEMENT_TAG, PUBLISHER_TEMPLATE_ELEMENT_TAG, 
 	AWARD_TEMPLATE_ELEMENT_TAG, SUBAWARD_TEMPLATE_ELEMENT_TAG];
 
-//播报中需要添加修饰词的元素
-var needModifyTags = [NAME_TEMPLATE_ELEMENT_TAG, ACTOR_TEMPLATE_ELEMENT_TAG, DIRECTOR_TEMPLATE_ELEMENT_TAG];
+//播报中需要添加修饰词的元素，按优先级排列
+var needModifyTags = [ACTOR_TEMPLATE_ELEMENT_TAG, NAME_TEMPLATE_ELEMENT_TAG, DIRECTOR_TEMPLATE_ELEMENT_TAG];
+
+var needModifyForActor = true;
+
+//需要自定义结词的元素，按优先级排列
+var needCustomizeEndTags = [TYPE_TEMPLATE_ELEMENT_TAG, NAME_TEMPLATE_ELEMENT_TAG];
 
 /**
  * 1. 获取模板（同时将标签替换（before标签））
@@ -234,12 +511,12 @@ function getTextForVideoQuery(semantic, templateTag)
 	var reply = null;
 	
 	//1. 提取模板，将模板中的标签替换掉
-	var template = service.getTemplate(templateTag);
+	var template = service.getTemplate(appid, templateTag);
 	if (isEmptyStr(template))
 	{
 		return null;
 	}
-	template = service.replaceTemplateTagInTemplate(template);
+	template = service.replaceTemplateTagInTemplate(appid, template);
 	if (isEmptyStr(template))
 	{
 		return null;
@@ -252,29 +529,28 @@ function getTextForVideoQuery(semantic, templateTag)
 	var memoryReply = getMemoryReply(semantic);
 	if (!isEmptyStr(memoryReply))
 	{
-		reply = service.replaceTemplateElementTagInTemplate(template, semantic);
+		reply = service.replaceTemplateElementTagInTemplate(appid, template, semantic);
 		reply = addAfter(reply, memoryReply);
 		return reply;
 	}
 	
-	//4. 判断element中是否有type
-	var hasTypeElementTag = false;
-	for (var i = 0; i < templateElementTags.size(); i ++)
+	//4. 判断element中是否有需要自定义结词的元素
+	for (var i = 0; i < needCustomizeEndTags.length; i ++)
 	{
-		if (templateElementTags.get(i) == TYPE_TEMPLATE_ELEMENT_TAG)
+		for (var j = 0; j < templateElementTags.size(); j ++)
 		{
-			hasTypeElementTag = true;
-			break;
-		}
-	}
-	if (hasTypeElementTag)
-	{
-		var typeEnd = service.getTemplate("Type_End", getType(semantic));
-		if (!isEmptyStr(typeEnd))
-		{
-			reply = service.replaceTemplateElementTagInTemplate(template, semantic);
-			reply = addAfter(reply, typeEnd);
-			return reply;
+			if (templateElementTags.get(j) == needCustomizeEndTags[i])
+			{
+				var templateElementTag = templateElementTags.get(j);
+				var templateTag = "<$" + templateElementTag + "_End$>";
+				var customizeEnd = service.getTemplate(appid, templateTag.toLowerCase(), semantic.get(templateElementTag));
+				if (!isEmptyStr(customizeEnd))
+				{
+					reply = service.replaceTemplateElementTagInTemplate(appid, template, semantic);
+					reply = addAfter(reply, customizeEnd);
+					return reply;
+				}
+			}
 		}
 	}
 	
@@ -290,15 +566,15 @@ function getTextForVideoQuery(semantic, templateTag)
 			{
 				var modify = modifyElementTagToModifyMap.get(modifyTag);
 				semantic.put(modifyTag, modify + semantic.get(modifyTag));
-				reply = service.replaceTemplateElementTagInTemplate(template, semantic);
+				reply = service.replaceTemplateElementTagInTemplate(appid, template, semantic);
 				return reply;
 			}
 		}
 	}
 	
 	//6.如果没有修饰词，添加结词, 替换词，返回
-	reply = service.replaceTemplateElementTagInTemplate(template, semantic);
-	var after = service.getTemplate(END_TEMPLATE_TAG);
+	reply = service.replaceTemplateElementTagInTemplate(appid, template, semantic);
+	var after = service.getTemplate(appid, END_TEMPLATE_TAG);
 	reply = addAfter(reply, after);
 	return reply;
 }
@@ -343,6 +619,8 @@ function getMemoryReply(semantic)
 /**
  * 获取需要修饰词的元素
  * 
+ * 如果Actor中有两个人，跳过Actor
+ * 
  * @param templateElementTags
  * @returns 返回结果有优先级
  */
@@ -352,6 +630,11 @@ function getModifyElementTags(templateElementTags)
 	for (var i = 0; i < needModifyTags.length; i ++)
 	{
 		var needModifyTag = needModifyTags[i];
+		//如果Actor中有两个人，跳过Actor
+		if (needModifyTag == ACTOR_TEMPLATE_ELEMENT_TAG && !needModifyForActor)
+		{
+			continue;
+		}
 		for (var j = 0; j < templateElementTags.size(); j ++)
 		{
 			if (templateElementTags.get(j) == needModifyTag)

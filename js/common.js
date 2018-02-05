@@ -18,6 +18,7 @@ var SOURCE_TEMPLATE_ELEMENT_TAG = "source".toLowerCase();
 var VALUE_TEMPLATE_ELEMENT_TAG = "value".toLowerCase();
 var OPERANDS_TEMPLATE_ELEMENT_TAG = "operands".toLowerCase();
 var DIRECT_TEMPLATE_ELEMENT_TAG = "direct".toLowerCase();
+var EPISODE_TEMPLATE_ELEMENT_TAG = "episode".toLowerCase();
 
 var END_TEMPLATE_TAG = "<$End$>".toLowerCase();
 
@@ -211,12 +212,22 @@ function getDirect(semantic)
 	return semantic.get(DIRECT_TEMPLATE_ELEMENT_TAG);
 }
 
+function hasEpisode(semantic)
+{
+	return semantic.get(EPISODE_TEMPLATE_ELEMENT_TAG) != null;
+}
+
+function getEpisode(semantic)
+{
+	return semantic.get(EPISODE_TEMPLATE_ELEMENT_TAG);
+}
+
 /**
  * 直接播报Format0模板
  */
 function getText(semantic, templateTag)
 {
-	return service.getText(semantic, templateTag);
+	return service.getText(appid, semantic, templateTag);
 }
 
 /**
@@ -228,7 +239,7 @@ function getText(semantic, templateTag)
  */
 function getText(semantic, templateTag, templateElementTags)
 {
-	return service.getText(semantic, templateTag, templateElementTags);
+	return service.getText(appid, semantic, templateTag, templateElementTags);
 }
 
 

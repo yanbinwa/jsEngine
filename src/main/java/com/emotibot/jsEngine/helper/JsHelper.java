@@ -90,7 +90,7 @@ public class JsHelper
         if (semantic.containsKey(SEMANTIC_USB_VALUE_TAG))
         {
             String listNumStr = "";
-            int value = Integer.parseInt((String) semantic.get(SEMANTIC_USB_VALUE_TAG));
+            int value = getInteger(semantic.get(SEMANTIC_USB_VALUE_TAG));
             if (value < 0)
             {
                 listNumStr += BACKWARD_STRING;
@@ -105,7 +105,7 @@ public class JsHelper
             String listNumStr = "";
             if (semantic.get(SEMANTIC_ROW_VALUE_TAG) != null)
             {
-                int row = Integer.parseInt((String) semantic.get(SEMANTIC_ROW_VALUE_TAG));
+                int row = getInteger(semantic.get(SEMANTIC_ROW_VALUE_TAG));
                 if (row < 0)
                 {
                     listNumStr += BACKWARD_STRING;
@@ -115,7 +115,7 @@ public class JsHelper
             }
             if (semantic.get(SEMANTIC_INDEX_VALUE_TAG) != null)
             {
-                int index = Integer.parseInt((String) semantic.get(SEMANTIC_INDEX_VALUE_TAG));
+                int index = getInteger(semantic.get(SEMANTIC_INDEX_VALUE_TAG));
                 if (index < 0)
                 {
                     listNumStr += BACKWARD_STRING;
@@ -157,5 +157,21 @@ public class JsHelper
             return null;
         }
         return new ArrayList<String>(semantic.keySet());
+    }
+    
+    private int getInteger(Object obj)
+    {
+        if (obj instanceof String)
+        {
+            return Integer.parseInt((String) obj);
+        }
+        else if (obj instanceof Double)
+        {
+            return Integer.parseInt(new java.text.DecimalFormat("0").format(obj));
+        }
+        else
+        {   
+            return (Integer)obj;
+        }
     }
 }

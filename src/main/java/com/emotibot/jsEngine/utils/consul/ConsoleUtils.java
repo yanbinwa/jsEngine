@@ -7,13 +7,6 @@ import com.emotibot.configclient.ConfigClientOptions;
 import com.emotibot.configclient.ConfigResponseCallback;
 import com.emotibot.configclient.ConsulConfigClient;
 
-/*
- * String consulServiceURL = "http://172.16.101.61:8500/";
- * String consulServiceKey = "idc/cnlu";
- * 
- * 保证console可以重连
- * 
- */
 public class ConsoleUtils
 {
     private static ConsulConfigClient configClient = null;

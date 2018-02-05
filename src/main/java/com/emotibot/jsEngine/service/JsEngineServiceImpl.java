@@ -1,5 +1,6 @@
 package com.emotibot.jsEngine.service;
 
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,21 +10,19 @@ import java.util.concurrent.Executors;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 import org.apache.log4j.Logger;
 
 import com.emotibot.jsEngine.common.Constants;
+import com.emotibot.jsEngine.consul.SynonymService;
+import com.emotibot.jsEngine.consul.SynonymServiceImpl;
 import com.emotibot.jsEngine.element.InputElement;
-import com.emotibot.jsEngine.exception.ConfigNotFoundException;
-import com.emotibot.jsEngine.execute.JSTaskManager;
 import com.emotibot.jsEngine.helper.JsHelper;
+import com.emotibot.jsEngine.jsExecute.manager.JsManager;
 import com.emotibot.jsEngine.step.FetchModifyStep;
 import com.emotibot.jsEngine.utils.InputElementUtils;
 import com.emotibot.jsEngine.utils.TemplateUtils;
-import com.emotibot.middleware.conf.ConfigManager;
 import com.emotibot.middleware.context.Context;
-import com.emotibot.middleware.utils.FileUtils;
 import com.emotibot.middleware.utils.JsonUtils;
 import com.emotibot.middleware.utils.StringUtils;
 
@@ -36,19 +35,24 @@ import com.emotibot.middleware.utils.StringUtils;
 public class JsEngineServiceImpl implements JsEngineService
 {
     private static Logger logger = Logger.getLogger(JsEngineServiceImpl.class);
-    private ScriptEngineManager manager;
-    private String jsFilePath;
     private JsHelper helper;
     private FetchModifyStep fetchModifyStep;
+    private JsManager jsManager;
+    private SynonymService synonymService;
     
-    public JsEngineServiceImpl() throws ConfigNotFoundException
+    public JsEngineServiceImpl()
     {
         init();
     }
     
     @Override
-    public String getReplay(String dataStr, String userid)
+    public String getReplay(String dataStr, String userid, String appid)
     {
+        if (StringUtils.isEmpty(dataStr) || StringUtils.isEmpty(userid) || StringUtils.isEmpty(appid))
+        {
+            logger.error("data or userid or appid is empty");
+            return null;
+        }
         long startTime = System.currentTimeMillis();
         InputElement inputElement = (InputElement)JsonUtils.getObject(dataStr, InputElement.class);
         if (inputElement == null)
@@ -62,19 +66,21 @@ public class JsEngineServiceImpl implements JsEngineService
         params.put(Constants.SERVICE_NAME, this);
         params.put(Constants.HELPER_NAME, helper);
         params.put(Constants.USER_ID, userid);
+        params.put(Constants.APPID, appid);
+        String reply = invokeJs(appid, params);
         long endTime = System.currentTimeMillis();
         logger.info("cost time: [" + (endTime - startTime) + "]");
-        return invokeJs(jsFilePath, params);
+        return reply;
     }
     
-    private void init() throws ConfigNotFoundException
+    private void init()
     {
-        JSTaskManager jsTaskManager = new JSTaskManager();
-        jsTaskManager.start();
+        jsManager = new JsManager();
         
-        jsFilePath = ConfigManager.INSTANCE.getPropertyString(Constants.JS_FILE_KEY);
         helper = new JsHelper();
-        manager = new ScriptEngineManager();
+        
+        synonymService = new SynonymServiceImpl();
+        synonymService.start();
         
         ExecutorService executorService = Executors.newFixedThreadPool(40);
         fetchModifyStep = new FetchModifyStep(executorService);
@@ -87,30 +93,38 @@ public class JsEngineServiceImpl implements JsEngineService
      * @param params
      * @return
      */
-    private String invokeJs(String jsFile, Map<String, Object> params)
+    @SuppressWarnings("unused")
+    private String invokeJs(String appid, Map<String, Object> params)
     {
-        ScriptEngine engine = manager.getEngineByName("js");
-        if (params != null)
+        List<Object> results = jsManager.eval(appid, params);
+        if (results == null || results.isEmpty())
         {
-            for(Map.Entry<String, Object> entry : params.entrySet())
+            return null;
+        }
+        return (String)results.get(0);
+    }
+    
+    
+    @SuppressWarnings("unused")
+    private String invokeJs1(String appid, Map<String, Object> params)
+    {
+        try
+        {
+            String fileName = "/Users/emotibot/Documents/workspace/other/myJsEngine/js/videoQuery.js";
+            ScriptEngineManager manager = new ScriptEngineManager();
+            ScriptEngine engine = manager.getEngineByName("js");
+            for (Map.Entry<String, Object> entry : params.entrySet())
             {
                 engine.put(entry.getKey(), entry.getValue());
             }
-        }
-        try
-        {
-            String commonJsFile = ConfigManager.INSTANCE.getPropertyString(Constants.COMMON_JS_FILE_KEY);
-            String fileStr = FileUtils.readFileToString(commonJsFile);
-            fileStr += FileUtils.readFileToString(jsFile);
-            String result = (String) engine.eval(fileStr);
-            return result;
+            return (String)engine.eval(new FileReader(fileName));
         } 
-        catch (ScriptException e)
+        catch (Exception e)
         {
             e.printStackTrace();
             return null;
         }
-    }   
+    }
     
     /**
      * 所有的修饰词均来自Knowledge，不需要从Template中获取，这里需要多线程进行query
@@ -140,7 +154,10 @@ public class JsEngineServiceImpl implements JsEngineService
         }
         Context context = new Context();
         context.setValue(Constants.MODIFY_TAG_TO_VALUE_MAP_KEY, modifyTagToValueMap);
+        long startTime = System.currentTimeMillis();
         fetchModifyStep.execute(context);
+        long endTime = System.currentTimeMillis();
+        logger.info("getModify cost time: [" + (endTime - startTime) + "]");
         Map<String, String> modifyTagToModifyMap = 
                 (Map<String, String>) context.getValue(Constants.MODIFY_TAG_TO_MODIFY_MAP_KEY);
         return modifyTagToModifyMap;
@@ -155,65 +172,65 @@ public class JsEngineServiceImpl implements JsEngineService
      * @param semantic
      * @return
      */
-    public String getText(Map<String, Object> semantic, String templateTag, List<String> templateElementOrCommonElementTags)
+    public String getText(String appid, Map<String, Object> semantic, String templateTag, List<String> templateElementOrCommonElementTags)
     {
         //获取template
-        String template = getTemplate(templateTag, templateElementOrCommonElementTags);
+        String template = getTemplate(appid, templateTag, templateElementOrCommonElementTags);
         if (StringUtils.isEmpty(template))
         {
             return null;
         }
         
         //提取template中的templateTag，获取该Tag的template，进行替换
-        template = replaceTemplateTagInTemplate(template);
+        template = replaceTemplateTagInTemplate(appid, template);
         if (StringUtils.isEmpty(template))
         {
             return null;
         }
         
         //获取template中的templateElementTag，进行替换
-        template = replaceTemplateElementTagInTemplate(template, semantic);
+        template = replaceTemplateElementTagInTemplate(appid, template, semantic);
         return template;
     }
     
-    public String getText(Map<String, Object> semantic, String templateTag, String commonTag)
+    public String getText(String appid, Map<String, Object> semantic, String templateTag, String commonTag)
     {
         List<String> commonElementTags = new ArrayList<String>();
         commonElementTags.add(commonTag);
-        return getText(semantic, templateTag, commonElementTags);
+        return getText(appid, semantic, templateTag, commonElementTags);
     }
     
-    public String getText(Map<String, Object> semantic, String templateTag)
+    public String getText(String appid, Map<String, Object> semantic, String templateTag)
     {
-        return getText(semantic, templateTag, (List<String>)null);
+        return getText(appid, semantic, templateTag, (List<String>)null);
     }
     
     
-    public String getTemplate(String templateTag)
+    public String getTemplate(String appid, String templateTag)
     {
-        return getTemplate(templateTag, (String) null);
+        return getTemplate(appid, templateTag, (String) null);
     }
     
-    public String getTemplate(String templateTag, String commonElementTag)
+    public String getTemplate(String appid, String templateTag, String commonElementTag)
     {
         List<String> commonElementTags = new ArrayList<String>();
         commonElementTags.add(commonElementTag);
-        return getTemplate(templateTag, commonElementTags);
+        return getTemplate(appid, templateTag, commonElementTags);
     }
     
-    public String getTemplate(String templateTag, List<String> templateOrCommonElementTags)
+    public String getTemplate(String appid, String templateTag, List<String> templateOrCommonElementTags)
     {
-        return TemplateUtils.getTemplate(templateTag, templateOrCommonElementTags);
+        return TemplateUtils.getTemplate(appid, templateTag, templateOrCommonElementTags);
     }
     
-    public String replaceTemplateTagInTemplate(String template)
+    public String replaceTemplateTagInTemplate(String appid, String template)
     {
         List<String> innerTemplateTags = TemplateUtils.getTemplateTagsFromInput(template);
         if (innerTemplateTags != null)
         {
             for (String innerTemplateTag : innerTemplateTags)
             {
-                String innerTemplate = getTemplate(innerTemplateTag);
+                String innerTemplate = getTemplate(appid, innerTemplateTag);
                 if (StringUtils.isEmpty(template))
                 {
                     logger.error("should contain innerTemplateTag: " + innerTemplateTag + "; tempalte is: " + template);
@@ -225,7 +242,7 @@ public class JsEngineServiceImpl implements JsEngineService
         return template;
     }
     
-    public String replaceTemplateElementTagInTemplate(String template, Map<String, Object> semantic)
+    public String replaceTemplateElementTagInTemplate(String appid, String template, Map<String, Object> semantic)
     {
         List<String> templateElementTags = TemplateUtils.getTemplateElementTagsFromInput(template);
         if (templateElementTags != null)
@@ -238,7 +255,7 @@ public class JsEngineServiceImpl implements JsEngineService
                     return null;
                 }
                 String value = (String) semantic.get(templateElementTag);
-                String synonym = TemplateUtils.getSynonym(templateElementTag, value);
+                String synonym = TemplateUtils.getSynonym(appid, templateElementTag, value);
                 if (!StringUtils.isEmpty(synonym))
                 {
                     value = synonym;
