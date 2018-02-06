@@ -6,8 +6,10 @@ import java.util.Map;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+import com.emotibot.jsEngine.common.Constants;
 import com.emotibot.jsEngine.jsExecute.task.JsTask;
 import com.emotibot.jsEngine.jsExecute.task.JsTaskFactory;
+import com.emotibot.middleware.conf.ConfigManager;
 
 public class JsTaskPool
 {
@@ -16,9 +18,9 @@ public class JsTaskPool
     public JsTaskPool()
     {
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMaxIdle(8);
-        poolConfig.setMaxTotal(10);
-        poolConfig.setMinIdle(2);
+        poolConfig.setMaxIdle(ConfigManager.INSTANCE.getPropertyInt(Constants.JS_MAX_IDLE_KEY));
+        poolConfig.setMaxTotal(ConfigManager.INSTANCE.getPropertyInt(Constants.JS_POOL_SIZE_KEY));
+        poolConfig.setMinIdle(ConfigManager.INSTANCE.getPropertyInt(Constants.JS_MIN_IDLE_KEY));
         objectPool = new GenericObjectPool<JsTask>(new JsTaskFactory(), poolConfig);
     }
     

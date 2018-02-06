@@ -132,8 +132,8 @@ public class SynonymServiceImpl implements SynonymService
                 count++;
                 logger.info(String.format("检查第%d/%d个词典 key:%s, value:%s\n", count, kvs.size(), key, value));
 
-                // 解析得到第三方条目的appid, md5, url,synonym-md5,synonym-url
-                logger.info("步骤一：获取appid，url，md5，synonym-url，synonym-md5");
+                // 解析得到第三方条目的appid, version, synonyn.json, template.json, common js脚本, 其它js脚本
+                logger.info("步骤一：appid, version, synonyn.json, template.json, common js脚本, 其它js脚本");
                 String appid = getAppid(key);
                 logger.debug(String.format("appid = [%s]\n", appid));
                 
@@ -143,6 +143,7 @@ public class SynonymServiceImpl implements SynonymService
                     return;
                 }
                 
+                logger.info("步骤二：对比本地version和远程version");
                 JsonObject valuesObj = getUrlMd5(value);
 
                 String version = valuesObj.has(Constants.CONSUL_VALUE_JSON_KEY_VERSION) ? 
@@ -183,6 +184,7 @@ public class SynonymServiceImpl implements SynonymService
                     updateForJs(appid, jsonArray);
                 }
             }
+            logger.info("步骤四：更新本地文件完成");
         } 
         catch (Exception e) 
         {
@@ -201,7 +203,7 @@ public class SynonymServiceImpl implements SynonymService
         // 如果为设置对应的url或md5码，则不做后续处理
         if(null == url)
         {
-            logger.error("url or remoteMD5 should not be null");
+            logger.error("url for synonym should not be null");
             return false;
         }
         url = getAdjustUrl(url);
@@ -209,7 +211,7 @@ public class SynonymServiceImpl implements SynonymService
         
         if (StringUtils.isEmpty(str))
         {
-            logger.error("fail to get the dictionaryContent");
+            logger.error("fail to get the synonym content");
             return false;
         }
         
@@ -222,7 +224,7 @@ public class SynonymServiceImpl implements SynonymService
         // 如果为设置对应的url或md5码，则不做后续处理
         if(null == url)
         {
-            logger.error("url or remoteMD5 should not be null");
+            logger.error("url for template should not be null");
             return false;
         }
         url = getAdjustUrl(url);
@@ -230,7 +232,7 @@ public class SynonymServiceImpl implements SynonymService
         
         if (StringUtils.isEmpty(str))
         {
-            logger.error("fail to get the dictionaryContent");
+            logger.error("fail to get the template content");
             return false;
         }
         
@@ -254,7 +256,7 @@ public class SynonymServiceImpl implements SynonymService
                 
                 if (StringUtils.isEmpty(str))
                 {
-                    logger.error("fail to get the dictionaryContent");
+                    logger.error("fail to get the common js context");
                     continue;
                 }
                 jsNameToJsContextMap.put(jsName, str);
@@ -280,7 +282,7 @@ public class SynonymServiceImpl implements SynonymService
                 
                 if (StringUtils.isEmpty(str))
                 {
-                    logger.error("fail to get the dictionaryContent");
+                    logger.error("fail to get the other js context");
                     continue;
                 }
                 jsNameToJsContextMap.put(jsName, str);
@@ -315,11 +317,8 @@ public class SynonymServiceImpl implements SynonymService
     
     private String getRemoteSynonymContent(String url)
     {
-        // 检查每个第三方条目的md5有没有改变
-        logger.info(String.format("步骤二：比较远程词典和本地词典的md5码，远程词典：%s", url));
-
         // 对于md5修改的条目，通过url得到词典文件，检查词典文件的md5是否正确
-        logger.info("步骤三：下载远程词典文件");
+        logger.info("步骤三：下载远程文件 " + url);
 
         byte[] out = HttpUtils.getContent(url);
         if (null == out) 
@@ -332,7 +331,6 @@ public class SynonymServiceImpl implements SynonymService
             logger.info("下载完成");
         }
 
-        logger.info("步骤六：更新本地词典");
         String content = new String(out);
         return content;
     }

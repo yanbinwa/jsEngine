@@ -43,4 +43,14 @@ public class Constants
     //JsUtils
     public static final String COMMON_JS_NAME = "common";
     
+    //js pool setting
+    public static final String JS_POOL_SIZE_KEY = "JS_POOL_SIZE";
+    public static final String JS_MAX_IDLE_KEY = "JS_MAX_IDLE";
+    public static final String JS_MIN_IDLE_KEY = "JS_MIN_IDLE";
+    
+    //MyEmbeddedServletContainerFactory
+    public static final String TOMCAT_PORT_KEY = "TOMCAT_PORT";
+    public static final String TOMCAT_MAX_CONNECTION_KEY = "TOMCAT_MAX_CONNECTION";
+    public static final String TOMCAT_MAX_THREAD_KEY = "TOMCAT_MAX_THREAD";
+    public static final String TOMCAT_CONNECTION_TIMEOUT_KEY = "TOMCAT_CONNECTION_TIMEOUT";
 }
