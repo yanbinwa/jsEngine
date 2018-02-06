@@ -77,8 +77,8 @@ public class FetchModifyTask extends AbstractTask
     class MyConstants
     {
         public static final String MODIFY_ENDPOINT = "?entityA=%s&propertyKey=%s";
-        public static final String MODIFY_PROPERTY_KEY = "修饰";
-        public static final int TIMEOUT = 100;
+        public static final String MODIFY_PROPERTY_KEY = "修饰词";
+        public static final int TIMEOUT = 200;
     }
 
 }
