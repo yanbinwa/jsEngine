@@ -35,6 +35,7 @@ public class JsEngineSpringTestServiceImpl implements JsEngineSpringTestService
         {
             return response;
         }
+        data = adjustData(data);
         String reply = jsEngineSpringService.getReply(userid, appid, data);
         if (StringUtils.isEmpty(reply))
         {
@@ -94,6 +95,65 @@ public class JsEngineSpringTestServiceImpl implements JsEngineSpringTestService
         {
             return response;
         }
+    }
+    
+    /**
+     * 模拟平台层对于语义层的改变
+     * 
+     * @param dataStr
+     * @return
+     */
+    private String adjustData(String dataStr)
+    {
+        JsonObject dataObj = (JsonObject) JsonUtils.getObject(dataStr, JsonObject.class);
+        JsonObject semanticObj = dataObj.get("semantic").getAsJsonObject();
+        String domain = dataObj.get("domain").getAsString();
+        String intent = dataObj.get("intent").getAsString();
+        String cmd = domain + "_" + intent;
+        //1. likelyName -> name
+        if (cmd.equals("VIDEO_QUERY") && semanticObj.has("likely_name"))
+        {
+            semanticObj.addProperty("name", semanticObj.get("likely_name").getAsString());
+            semanticObj.remove("likely_name");
+        }
+        
+        //2. VIDEO_QUERY name extra -> name_extra
+        if (cmd.equals("VIDEO_QUERY") && semanticObj.has("name") && semanticObj.has("extra"))
+        {
+            semanticObj.addProperty("name", semanticObj.get("name").getAsString() + semanticObj.get("extra").getAsString());
+            semanticObj.remove("extra");
+        }
+        
+        //3. VIDEO_PLAY semantic有value无source时，新增source字段
+        if (cmd.equals("VIDEO_PLAY") && semanticObj.has("value") && !semanticObj.has("source"))
+        {
+            semanticObj.addProperty("source", "EPG");
+        }
+        
+        //4. VIDEO_QUERY 存在type但无category，新增category为电影
+        if (cmd.equals("VIDEO_QUERY") && semanticObj.has("type") && !semanticObj.has("category"))
+        {
+            semanticObj.addProperty("category", "电影");
+        }
+        
+        //5. VIDEO_QUERY term -> episode part -> season
+        if (cmd.equals("VIDEO_QUERY") && semanticObj.has("term"))
+        {
+            semanticObj.addProperty("episode", semanticObj.get("term").getAsString());
+            semanticObj.remove("term");
+        }
+        if (cmd.equals("VIDEO_QUERY") && semanticObj.has("part"))
+        {
+            semanticObj.addProperty("season", semanticObj.get("part").getAsString());
+            semanticObj.remove("part");
+        }
+        
+        //6. VIDEO_QUERY source name -> VIDEO_PLAY
+        if (cmd.equals("VIDEO_QUERY") && semanticObj.has("source") && semanticObj.has("name"))
+        {
+            dataObj.addProperty("intent", "PLAY");
+        }
+        return dataObj.toString();
     }
     
     class MyConstants

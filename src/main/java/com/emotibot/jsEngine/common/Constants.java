@@ -44,9 +44,9 @@ public class Constants
     public static final String COMMON_JS_NAME = "common";
     
     //js pool setting
-    public static final String JS_POOL_SIZE_KEY = "JS_POOL_SIZE";
-    public static final String JS_MAX_IDLE_KEY = "JS_MAX_IDLE";
-    public static final String JS_MIN_IDLE_KEY = "JS_MIN_IDLE";
+    public static final int JS_POOL_SIZE = 10;
+    public static final int JS_MAX_IDLE_KEY = 8;
+    public static final int JS_MIN_IDLE_KEY = 2;
     
     //MyEmbeddedServletContainerFactory
     public static final String TOMCAT_PORT_KEY = "TOMCAT_PORT";

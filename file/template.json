@@ -301,7 +301,7 @@
 		]
 	},
 	{
-		"Type" : "Type_End",
+		"Type" : "<$Type_End$>",
 		"FormatType" : "2",
 		"Description" : "type自定义结词",
 		"Data" : [

@@ -112,31 +112,36 @@ function translateSemanticValue(semantic)
 
 function getReplyWithName(semantic)
 {
-	if (hasActor(semantic) && hasDirector(semantic))
+	var semanticElementNum = getSemanticElementNum(semantic);
+	if (hasActor(semantic) && hasDirector(semantic) && semanticElementNum == 3)
 	{
 		return getTextForVideoQuery(semantic, "Name_Director_Actor");
 	}
-	if (hasActor(semantic) && hasYear(semantic))
+	if (hasActor(semantic) && hasYear(semantic) && semanticElementNum == 3)
 	{
 		return getTextForVideoQuery(semantic, "Name_Year_Actor");
 	}
-	if (hasYear(semantic) && hasDirector(semantic))
+	if (hasYear(semantic) && hasDirector(semantic) && semanticElementNum == 3)
 	{
 		return getTextForVideoQuery(semantic, "Name_Year_Director");	
 	}
-	if (hasActor(semantic))
+	if (hasActor(semantic) && semanticElementNum == 2)
 	{
 		return getTextForVideoQuery(semantic, "Name_Actor");
 	}
-	if (hasDirector(semantic))
+	if (hasDirector(semantic) && semanticElementNum == 2)
 	{
 		return getTextForVideoQuery(semantic, "Name_Director");
 	}
-	if (hasYear(semantic))
+	if (hasYear(semantic) && semanticElementNum == 2)
 	{
 		return getTextForVideoQuery(semantic, "Name_Year");
 	}
-	return getTextForVideoQuery(semantic, "Name");
+	if (semanticElementNum == 1)
+	{
+		return getTextForVideoQuery(semantic, "Name");
+	}
+	return null;
 }
 
 function getReplyWithoutNameNum1(semantic)
@@ -248,7 +253,7 @@ function getReplyWithCommontTemplate(semantic)
 /*********************************** START VideoQuery 特有的方法 ********************************/
 
 //播报中需要关注的semantic中的元素
-var needElementTags = [	, ACTOR_TEMPLATE_ELEMENT_TAG, DIRECTOR_TEMPLATE_ELEMENT_TAG, TYPE_TEMPLATE_ELEMENT_TAG, 
+var needElementTags = [NAME_TEMPLATE_ELEMENT_TAG, ACTOR_TEMPLATE_ELEMENT_TAG, DIRECTOR_TEMPLATE_ELEMENT_TAG, TYPE_TEMPLATE_ELEMENT_TAG, 
 	AREA_TEMPLATE_ELEMENT_TAG, YEAR_TEMPLATE_ELEMENT_TAG, ROLE_TEMPLATE_ELEMENT_TAG, 
 	LANGUAGE_TEMPLATE_ELEMENT_TAG, RATE_TEMPLATE_ELEMENT_TAG, PUBLISHER_TEMPLATE_ELEMENT_TAG, 
 	AWARD_TEMPLATE_ELEMENT_TAG, SUBAWARD_TEMPLATE_ELEMENT_TAG];
@@ -332,6 +337,18 @@ function getTextForVideoQuery(semantic, templateTag)
 			if (modifyElementTagToModifyMap.get(modifyTag) != null)
 			{
 				var modify = modifyElementTagToModifyMap.get(modifyTag);
+				//如果是片名的修饰词同时还有category，但是修饰词中出现电影，category是电视剧，或者相反，不使用该修饰词
+				if (modifyTag == NAME_TEMPLATE_ELEMENT_TAG && hasCategory(semantic))
+				{
+					if (getCategory(semantic) == "电影" && modify.indexOf("电视剧") >= 0)
+					{
+						continue;
+					}
+					if (getCategory(semantic) == "电视剧" && modify.indexOf("电影") >= 0)
+					{
+						continue;
+					}
+				}
 				semantic.put(modifyTag, modify + semantic.get(modifyTag));
 				reply = service.replaceTemplateElementTagInTemplate(appid, template, semantic);
 				return reply;

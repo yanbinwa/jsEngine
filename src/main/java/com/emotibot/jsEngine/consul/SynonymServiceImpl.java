@@ -38,7 +38,7 @@ public class SynonymServiceImpl implements SynonymService
     private String consulServiceURL = null;
     private String consulKeyPrefix = null;
     private boolean isRunLocal = false;
-    private String localVersion = null;
+    private Map<String, String> localVersionMap = new HashMap<String, String>();
     
     private ConsulConfigClient consulConfigClient = null;
     private ConfigResponseCallback callback = new ConsulCallback();
@@ -154,6 +154,7 @@ public class SynonymServiceImpl implements SynonymService
                     logger.error("version为空");
                     return;
                 }
+                String localVersion = localVersionMap.get(appid);
                 if (version.equals(localVersion))
                 {
                     logger.info("version号一致，不需要更新");
@@ -183,6 +184,8 @@ public class SynonymServiceImpl implements SynonymService
                     JsonArray jsonArray = valuesObj.get(Constants.CONSUL_VALUE_JSON_KEY_JS_LIST).getAsJsonArray();
                     updateForJs(appid, jsonArray);
                 }
+                
+                localVersionMap.put(appid, version);
             }
             logger.info("步骤四：更新本地文件完成");
         } 

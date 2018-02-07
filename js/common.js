@@ -34,12 +34,12 @@ function getName(semantic)
 
 function hasLikelyName(semantic)
 {
-	return semantic.get(NAME_TEMPLATE_ELEMENT_TAG) != null;
+	return semantic.get(LIKELY_NAME_TEMPLATE_ELEMENT_TAG) != null;
 }
 
 function getLikelyName(semantic)
 {
-	return semantic.get(NAME_TEMPLATE_ELEMENT_TAG);
+	return semantic.get(LIKELY_NAME_TEMPLATE_ELEMENT_TAG);
 }
 
 function hasActor(semantic)

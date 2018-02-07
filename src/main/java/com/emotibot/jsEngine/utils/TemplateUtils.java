@@ -427,7 +427,7 @@ public class TemplateUtils
             boolean tag = true;
             for (String templateElementTag : templateElementTags)
             {
-                if (!template.contains(templateElementTag))
+                if (!template.contains(buildTemplateElementTagWithBeginAndAfter(templateElementTag)))
                 {
                     tag = false;
                     break;
@@ -448,6 +448,13 @@ public class TemplateUtils
         String[] templateSections = chooseTemplate.split(COMMON_TEMPLATE_SPLIT_TAG);
         for (String templateSection : templateSections)
         {
+            List<String> getTags = getTemplateElementTagsFromInput(templateSection);
+            //如果段落中不包含[$xxx$]，直接加入到template中
+            if (getTags == null || getTags.isEmpty())
+            {
+                template += templateSection;
+                continue;
+            }
             for (String templateElement : templateElementTags)
             {
                 if (templateSection.contains(buildTemplateElementTagWithBeginAndAfter(templateElement)))

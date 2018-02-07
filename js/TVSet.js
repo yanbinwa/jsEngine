@@ -20,22 +20,22 @@ function getReply(semantic)
 	var value = parseInt(getValue(semantic));
 	if (getOperands(semantic) == "OBJ_VOLUMN")
 	{
-		if (value > 50)
+		if (value >= 40)
 		{
 			return getText(semantic, "TVSet", "VolumeTooHigh");
 		}
-		else if (value < 5)
+		else if (value <= 5)
 		{
 			return getText(semantic, "TVSet", "VolumeTooLow");
 		}
 	}
 	else if (getOperands(semantic) == "OBJ_BRIGHTNESS")
 	{
-		if (value > 50)
+		if (value >= 60)
 		{
 			return getText(semantic, "TVSet", "BrightTooHigh");
 		}
-		else if (value < 5)
+		else if (value <= 15)
 		{
 			return getText(semantic, "TVSet", "BrightTooLow");
 		}
